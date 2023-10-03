@@ -329,7 +329,7 @@ do
 		GetRun=fileStringGet
 	else
 
-		GetPartFromPort,GetPartsFromPort,Beep = nil,nil,nil
+		GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil
 --[[		local HttpService = game:GetService("HttpService")
 
 		screens["mainScreen"] = WOSscreenEmulator.screenClass:new{SurfaceGUI=game.Workspace:FindFirstChild("mainScreen").SurfaceGui}
@@ -489,16 +489,10 @@ do
 	table.clear(framesData)
 	local batchSize = 512
 
+	local renderCoros,frameI = {},0
 
-
-	local renderCoros,frameI,midiPoly = {},0,GetPartFromPort(35,"Polysilicon") 
-
-	if midiPoly then table.insert(renderCoros,coroutine.create(function()
-			task.wait(0.5)
-			midiPoly:Trigger()
-		end))
-	end
-
+	
+	
 	for frameI,renderChunks in next,renderFrames do
 		insert(renderCoros, frameI, coroutine.create(function()
 			local coroI = frameI;local renderChunks = renderChunks
@@ -532,6 +526,7 @@ do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
+	TriggerPort(35)
 
 	task.wait(metadata.frameCount/metadata.fps+2)
 	print("EOF")
