@@ -526,7 +526,7 @@ do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
-	TriggerPort(35)
+	TriggerPort(35);task.wait(0.5)
 
 	task.wait(metadata.frameCount/metadata.fps+2)
 	print("EOF")
