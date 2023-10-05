@@ -87,10 +87,9 @@ def prepFrameForCompression(frameArray):
   return frameWithMD
 
 def getUncompressedData():
-  if not os.path.isfile(uncompressedBufferFilePath) or not os.path.isfile(referenceFrameFilePath) or overwrite:
+  if not os.path.isfile(uncompressedBufferFilePath) or overwrite:
     with open(inputFilePath, "r", encoding="utf-8") as inputFile:
       with open(uncompressedBufferFilePath, "wb") as outputFile: outputFile.close()
-      with open(referenceFrameFilePath, "wb") as outputFile: outputFile.close()
 
       readString = inputFile.read((width+1)*height)
       storedFrameBytes = np.zeros((90,120,2),'u1')
@@ -148,10 +147,8 @@ def bacfCompress(bacfPath:str, bacrPath:str):
 
 getUncompressedData()
 
-bHead = b'''local function fileStringGet(...)
-
-  local payloadString = string.gsub(\"'''
-bTail = b"\",'..',function (cc)return string.char(tonumber(cc, 16))end)\n\treturn payloadString\nend"
+bHead = b'''local function fileStringGet(...)local payloadString = string.gsub(\"'''
+bTail = b"\",'..',function (cc)return string.char(tonumber(cc, 16))end)return payloadString end"
 
 insertFile = "BadApple!-WOS.lua"
 aSPath = "allString.lua"
@@ -173,7 +170,7 @@ if insertFile:
   toInsert = open(aSPath,"r").read()
   contents = open(insertFile, 'r+').readlines()
 
-  contents.insert(3, "\n" + toInsert + "\n")
+  contents[3] = toInsert + "\n"
   open('Packed-'+insertFile,'w').writelines(contents)
   dataPath = "Packed-"+insertFile
 
