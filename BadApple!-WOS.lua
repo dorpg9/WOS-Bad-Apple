@@ -1,8 +1,7 @@
--- netID - nil
-local fileURL = [[https://cdn.discordapp.com/attachments/369261998434942977/1154400348312698930/BadApple.bacs]]
+-- Bad Apple!
 local pImages = {['normal']="rbxassetid://14750789446"}
 
-
+--insertMarker_fileStringGet
 
 local byte = string.byte --returns nil if no char at index
 local char = string.char
@@ -310,55 +309,22 @@ local function InitGUI()
 	end
 end
 
-local disk,diskObject
 do
 	screens = {}
 
-	if GetPartFromPort then
-		screens["mainScreen"] = GetPartFromPort(1, "Screen")
-		buildScreens = GetPartsFromPort(2, "Screen")
-		
-		for _,screen in screens do screen:ClearElements() end
-		for _,bScreen in next,buildScreens do bScreen:ClearElements() end
-		
-		--diskObject = GetPartFromPort(5,"Disk");diskObject:ClearDisk()
-		--GetRun = fileStringGet
-		--fileStringGet = nil
-		
-		assert(fileStringGet, "Please insert cash or payment type.")
-		GetRun=fileStringGet
-	else
+	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
+	screens["mainScreen"] = GetPartFromPort(1, "Screen")
+	buildScreens = GetPartsFromPort(2, "Screen")
+	
+	for _,screen in screens do screen:ClearElements() end
+	for _,bScreen in next,buildScreens do bScreen:ClearElements() end
 
-		GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil
---[[		local HttpService = game:GetService("HttpService")
-
-		screens["mainScreen"] = WOSscreenEmulator.screenClass:new{SurfaceGUI=game.Workspace:FindFirstChild("mainScreen").SurfaceGui}
-		screens["buildScreen"] = WOSscreenEmulator.screenClass:new{SurfaceGUI=game.Workspace:FindFirstChild("buildScreen").SurfaceGui}
-
-		GetRun = function(url)
-			return HttpService:PostAsync(url, "")
-		end
-		PostRequest = function(url, dataString, headersTable)
-			return HttpService:PostAsync(url, "")
-		end]]
-	end
 	subScreen = {}
 	for screenName,screen in screens do
 		subScreen[screenName] = screen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
 	end
-end
 
-
-do
 	print("Attempting Download")
-	file = GetRun(fileURL)
-	
-	metadata = {
-		["width"] = sUnpack(">I2",file,1),
-		["height"] = sUnpack(">I2",file,3),
-		["frameCount"] = sUnpack(">I3",file,5),
-		["fps"] = sUnpack(">I1",file,8),
-	}
 	
 	for k,v in metadata do
 		print(k.." - "..v)
@@ -389,133 +355,166 @@ do
 		end
 		if rChunkX%2==0 then task.wait() end
 	end
-
-	local framesData = {}
-
-	local processedCount = 0
-	local processCoroutines = {}
 	
-	compressedPackets = {}
-	local read,pointer = "",9
-	while pointer<=#file do
-		read,pointer = sUnpack(">s4",file,pointer)
-		task.wait()
-		insert(processCoroutines,task.spawn(function(toDecomp)
-			local success, err = pcall(function()
-				
-				for frameI,frameD in sUnpackIter(">I2s2",LibDeflate:DecompressZlib(toDecomp)) do
-					frameI+=1
-					if #frameD==0 then
-						framesData[frameI]={frameFormat=1}
-					else
-						framesData[frameI] = {frameFormat=0,scanlines={}}
-
-						local pointer3 = 1
-						for slY=1,heightInChunks do
-							local resultSl,slBytes={zPaddedSlBytes=create(widthInChunks*2,0)},nil
-							resultSl.filterMethod,slBytes,pointer3=sUnpack(">I1s2",frameD,pointer3)
-							for cB in string.gmatch(slBytes,"....") do
-								local cI,cB1,cB2=sUnpack(">I2I1I1",cB)
-								resultSl.zPaddedSlBytes[cI*2-1],resultSl.zPaddedSlBytes[cI*2]=cB1,cB2
-							end
-							framesData[frameI].scanlines[slY]=resultSl
-						end
-						task.wait()
-					end
-					processedCount+=1
-					if processedCount%10==0 then
-						updateProgress("read", processedCount/metadata.frameCount, "Reading file...")
-					end
-				end
-			end)
-			if not success then print("Failed, Error: "..err);--[[Beep(0.75)]]
-			else print("Success");--[[Beep(1.25)]]end
-		end, read))
-	end
-	
-	repeat
-		for k,v in pairs(processCoroutines) do
-			if coroutine.status(v)=="dead" then
-				remove(processCoroutines,k)
-			end
-			task.wait()
-		end
-	until #processCoroutines==0
-	
-	file = nil
-	updateProgress("read", 0.999)
-	local renderFrames = {}
-	
-	local lChunk1,lChunk2 = {},{}
-	for y=1,heightInRChunks do
-		lChunk1[y],lChunk2[y]={},{}
-		for x=1,widthInRChunks do
-			lChunk1[y][x],lChunk2[y][x]=0,0
+	local rendererOffsets,vector2x4Table = {},{}
+	for rCX=1,widthInRChunks do
+		rendererOffsets[rCX]={}
+		for rCY=1,heightInRChunks do
+			rendererOffsets[rCX][rCY]={renderers[rCX][rCY].label1.ImageRectOffset,renderers[rCX][rCY].label2.ImageRectOffset}
 		end
 	end
 	
-	for frameI,frame in pairs(framesData) do
-		if frame.frameFormat ~= 0 then continue end
-		renderFrames[frameI] = {}
+	for x=0,255 do
+		vector2x4Table[x]={}
+		for y=0,255 do
+			vector2x4Table[x][y]=Vector2.new(x*4,y*4)
+		end
+	end
+	
+	local renderFrames = nil
+	
+	do
+		local k,j=rendererOffsets,vector2x4Table
+		--insertMarker_renderFrames
+	end
+	
+	if not renderFrames then
+		assert(fileStringGet, "Please insert cash or payment type.")
+		local file = fileStringGet()
 		
+		metadata = {
+			["width"] = sUnpack(">I2",file,1),
+			["height"] = sUnpack(">I2",file,3),
+			["frameCount"] = sUnpack(">I3",file,5),
+			["fps"] = sUnpack(">I1",file,8),
+		}
+		
+		local framesData = {}
 
-		local builtScanline
-		for rCY,slData in pairs(frame.scanlines) do
-			builtScanline = undoFilter(slData.filterMethod,slData.zPaddedSlBytes,builtScanline)
-			
-			for rCX=1,widthInChunks/2 do
-				local chunk1,chunk2 = builtScanline[rCX*4-3]*256+builtScanline[rCX*4-2],builtScanline[rCX*4-1]*256+builtScanline[rCX*4]
+		local processedCount = 0
+		local processCoroutines = {}
+		
+		compressedPackets = {}
+		local read,pointer = "",9
+		while pointer<=#file do
+			read,pointer = sUnpack(">s4",file,pointer)
+			task.wait()
+			insert(processCoroutines,task.spawn(function(toDecomp)
+				local success, err = pcall(function()
+					
+					for frameI,frameD in sUnpackIter(">I2s2",LibDeflate:DecompressZlib(toDecomp)) do
+						frameI+=1
+						if #frameD==0 then
+							framesData[frameI]={frameFormat=1}
+						else
+							framesData[frameI] = {frameFormat=0,scanlines={}}
 
-				if chunk1+chunk2~=0 then
-					lChunk1[rCY][rCX],lChunk2[rCY][rCX] = bit32.bxor(chunk1,lChunk1[rCY][rCX]),bit32.bxor(chunk2,lChunk2[rCY][rCX])
-					insert(renderFrames[frameI],{
-						cl1=renderers[rCX][rCY].label1,
-						cl2=renderers[rCX][rCY].label2,
-						l1=Vector2.new(
-							(lChunk1[rCY][rCX]%256)*4,
-							fdiv(lChunk1[rCY][rCX],256)*4),
-						l2=Vector2.new(
-							(lChunk2[rCY][rCX]%256)*4,
-							fdiv(lChunk2[rCY][rCX],256)*4)})
+							local pointer3 = 1
+							for slY=1,heightInChunks do
+								local resultSl,slBytes={zPaddedSlBytes=create(widthInChunks*2,0)},nil
+								resultSl.filterMethod,slBytes,pointer3=sUnpack(">I1s2",frameD,pointer3)
+								for cB in string.gmatch(slBytes,"....") do
+									local cI,cB1,cB2=sUnpack(">I2I1I1",cB)
+									resultSl.zPaddedSlBytes[cI*2-1],resultSl.zPaddedSlBytes[cI*2]=cB1,cB2
+								end
+								framesData[frameI].scanlines[slY]=resultSl
+							end
+							task.wait()
+						end
+						processedCount+=1
+						if processedCount%10==0 then
+							updateProgress("read", processedCount/metadata.frameCount, "Reading file...")
+						end
+					end
+				end)
+				if not success then print("Failed, Error: "..err);--[[Beep(0.75)]]
+				else print("Success");--[[Beep(1.25)]]end
+			end, read))
+		end
+		
+		repeat
+			for k,v in pairs(processCoroutines) do
+				if coroutine.status(v)=="dead" then
+					remove(processCoroutines,k)
 				end
+				task.wait()
+			end
+		until #processCoroutines==0
+		
+		file = nil
+		updateProgress("read", 0.999)
+		
+		local lChunk1,lChunk2,rendererOffsets = {},{},{}
+		for rCX=1,widthInRChunks do
+			lChunk1[rCX],lChunk2[rCX],rendererOffsets[rCX]={},{},{}
+			for rCY=1,heightInRChunks do
+				lChunk1[rCX][rCY],lChunk2[rCX][rCY]=0,0
+				rendererOffsets={renderers[rCX][rCY].label1.ImageRectOffset,renderers[rCX][rCY].label2.ImageRectOffset}
 			end
 		end
-		if frameI%10==0 then
-			task.wait()
-			updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
+		
+		for frameI,frame in pairs(framesData) do
+			if frame.frameFormat ~= 0 then continue end
+			renderFrames[frameI] = {}
+			
+
+			local builtScanline
+			for rCY,slData in pairs(frame.scanlines) do
+				builtScanline = undoFilter(slData.filterMethod,slData.zPaddedSlBytes,builtScanline)
+				
+				for rCX=1,widthInChunks/2 do
+					local chunk1,chunk2 = builtScanline[rCX*4-3]*256+builtScanline[rCX*4-2],builtScanline[rCX*4-1]*256+builtScanline[rCX*4]
+
+					if chunk1+chunk2~=0 then
+						lChunk1[rCX][rCY],lChunk2[rCX][rCY] = bit32.bxor(chunk1,lChunk1[rCX][rCY]),bit32.bxor(chunk2,lChunk2[rCX][rCY])
+						insert(renderFrames[frameI],{
+							rendererOffsets[rCX][rCY],
+							vector2x4Table[(lChunk1[rCX][rCY]%256)][fdiv(lChunk1[rCX][rCY],256)],
+							vector2x4Table[(lChunk2[rCX][rCY]%256)][fdiv(lChunk2[rCX][rCY],256)]})
+					end
+				end
+			end
+			if frameI%10==0 then
+				task.wait()
+				updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
+			end
 		end
+		updateProgress("decode", 0.999)
+		table.clear(framesData)
 	end
-	updateProgress("decode", 0.999)
-	table.clear(framesData)
-	local batchSize = 512
+	
+	local batchSize = 128
 
 	local renderCoros,frameI = {},0
 
-	
+	local function renderBatch(toRenderChunks)
+		coroutine.yield()
+		task.wait(frameI/metadata.fps)
+		for cI=1,#toRenderChunks do
+			local renderingChunk = toRenderChunks[cI]
+			local offsetProp = renderingChunk[1]
+			
+			offsetProp[1] = renderingChunk[2]
+			offsetProp[2] = renderingChunk[3]
+		end
+	end
 	
 	for frameI,renderChunks in next,renderFrames do
-		insert(renderCoros, frameI, coroutine.create(function()
-			local coroI = frameI;local renderChunks = renderChunks
-			
-			task.wait(frameI/metadata.fps)
-			
-			 
+		local frameCoro = coroutine.create(function()
+			local batchCoros = {}
 			for batchI = 1, ceil(#renderChunks/batchSize) do
-				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
+				local batchCoro = coroutine.create(renderBatch)
+				local success,err = coroutine.resume(batchCoro, table.move(renderChunks, (batchI-1)*batchSize+1, min(batchSize*batchI,#renderChunks),1,{}))
+				assert(success,err)
 				
-				task.spawn(function()
-					for cI=sI,eI do
-						local renderChunk = renderChunks[cI]
-						renderChunk.cl1.ImageRectOffset = renderChunk.l1
-						renderChunk.cl2.ImageRectOffset = renderChunk.l2
-					end
-				end)
+				batchCoros[batchI]=batchCoro
 			end
-
 			
-			renderCoros[coroI] = nil
-
-		end))
+			coroutine.yield()
+			for _,c in next,batchCoros do coroutine.resume(c) end
+		end);local success,err = coroutine.resume(frameCoro);assert(success,err)
+		
+		insert(renderCoros, frameCoro)
 		if frameI%50==0 then
 			task.wait()
 			updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
@@ -526,7 +525,12 @@ do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
-	TriggerPort(35);task.wait(0.5)
+	for _,v in next,GetPartsFromPort(35,"Speaker") do v:ClearSounds() end
+	do
+		local disk=GetPartFromPort(35,"Disk")
+		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
+		disk:Write('midiCoroutines', nil)
+	end
 
 	task.wait(metadata.frameCount/metadata.fps+2)
 	print("EOF")
