@@ -156,9 +156,10 @@ do
 	Renderer = {}
 
 	function Renderer.new(rChunkX:number,rChunkY:number)
-		local label1,label2 = createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2-1,rChunkY)),
-			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY));
-		return setmetatable({label1,label2},{__call=Renderer.set2PropertiesFunction('ImageRectOffset',label1,label2)})
+		local label1,label2 = 
+			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2-1,rChunkY)),
+			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY))
+		return setmetatable({label1,label2},{})
 	end
 
 	function Renderer.getInitPDict(cX,cY)
@@ -186,23 +187,6 @@ do
 			end
 		end
 	end
-	
-	function Renderer.set2PropertiesFunction(propertyName,o1,o2)
-		local __newindex=getmetatable(o1).__newindex
-		return function(vT)
-			__newindex(o1,propertyName,vT[1])
-			__newindex(o2,propertyName,vT[2])
-		end
-	end
-	
-	
-	local uFilterFunctions = {
-		[1]=function(rcSl,_)
-
-		end;
-		[2]=function(rcSl,pSl)
-		end;
-	}
 
 	function undoFilter(method, rcSl, pSl) --result scanline Is the current scanline
 		-- local filterUnit = 2 --number of bytes in each chunk, therefore the increment
@@ -227,7 +211,7 @@ do
 
 	for x=0,255 do
 		for y=0,255 do
-			vector2x4Table[x*256+y]=Vector2.new(x*4,y*4)
+			vector2x4Table[x][y]=Vector2.new(x*4,y*4)
 		end
 	end
 end
@@ -446,11 +430,11 @@ do
 		file = nil
 		updateProgress("read", 0.999)
 
-		local lChunk1,lChunk2 = {},{}
+		local lastChunks = {}
 		for y=1,heightInRChunks do
-			lChunk1[y],lChunk2[y]={},{}
+			lastChunks[y]={}
 			for x=1,widthInRChunks do
-				lChunk1[y][x],lChunk2[y][x]=0,0
+				lastChunks[y][x]={0,0}
 			end
 		end
 
@@ -464,19 +448,16 @@ do
 				builtScanline = undoFilter(slData.filterMethod,slData.zPaddedSlBytes,builtScanline)
 
 				for rCX=1,widthInChunks/2 do
-					local chunk1,chunk2 = builtScanline[rCX*4-3]*256+builtScanline[rCX*4-2],builtScanline[rCX*4-1]*256+builtScanline[rCX*4]
+					local builtChunk1,builtChunk2 = builtScanline[rCX*4-3]*256+builtScanline[rCX*4-2],builtScanline[rCX*4-1]*256+builtScanline[rCX*4]
 
-					if chunk1+chunk2~=0 then
-						lChunk1[rCY][rCX],lChunk2[rCY][rCX] = bit32.bxor(chunk1,lChunk1[rCY][rCX]),bit32.bxor(chunk2,lChunk2[rCY][rCX])
+					if builtChunk1+builtChunk2~=0 then
+						local chunksHere = lastChunks[rCY][rCX]
+						chunksHere[1],chunksHere[2] = bit32.bxor(builtChunk1,chunksHere[1]),bit32.bxor(builtChunk2,chunksHere[2])
 						insert(renderFrames[frameI],{
-							renderers[rCX][rCY].label1,
-							renderers[rCX][rCY].label2,
-							Vector2.new(
-								(lChunk1[rCY][rCX]%256)*4,
-								fdiv(lChunk1[rCY][rCX],256)*4),
-							Vector2.new(
-								(lChunk2[rCY][rCX]%256)*4,
-								fdiv(lChunk2[rCY][rCX],256)*4)})
+							renderers[rCX][rCY][1],
+							renderers[rCX][rCY][2],
+							vector2x4Table[chunksHere[1]%256][fdiv(chunksHere[1],256)],
+							vector2x4Table[chunksHere[2]%256][fdiv(chunksHere[2],256)]})
 					end
 				end
 			end
@@ -487,14 +468,24 @@ do
 		end
 	end
 	updateProgress("decode", 0.999)
-	local batchSize = 512
+	local batchSize = 256
 
 	local renderCoros,frameI = {},0
 
 	for frameI,renderChunks in next,renderFrames do
-		insert(renderCoros, frameI, coroutine.create(function()
-			local coroI = frameI;local renderChunks = renderChunks
+		for batchI = 1, ceil(#renderChunks/batchSize) do
+			local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
 
+			insert(renderCoros, coroutine.create(function()
+				task.wait(frameI/metadata.fps)
+				for cI=sI,eI do
+					local renderChunk = renderChunks[cI]
+					renderChunk[1].ImageRectOffset = renderChunk[3]
+					renderChunk[2].ImageRectOffset = renderChunk[4]
+				end
+			end))
+		end
+--[[		insert(renderCoros, frameI, coroutine.create(function()
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
 
@@ -507,11 +498,7 @@ do
 					end
 				end)
 			end
-
-
-			renderCoros[coroI] = nil
-
-		end))
+		end))]]
 		if frameI%50==0 then
 			task.wait()
 			updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
