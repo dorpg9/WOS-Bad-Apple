@@ -491,14 +491,9 @@ do
 
 	local renderCoros,frameI = {},0
 
-
-
 	for frameI,renderChunks in next,renderFrames do
 		insert(renderCoros, frameI, coroutine.create(function()
 			local coroI = frameI;local renderChunks = renderChunks
-
-			
-
 
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
