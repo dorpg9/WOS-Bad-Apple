@@ -526,7 +526,7 @@ do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
-	for _,v in next,GetPartsFromPort(35,"Speaker") do v:ClearSounds() end
+	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
 	do
 		local disk=GetPartFromPort(35,"Disk")
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
