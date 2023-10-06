@@ -114,6 +114,7 @@ do
 end
 -- Other Libraries, Classes and Functions
 local sUnpackIter, createScreenObject, Renderer, UndoFilter, b64Decode, dump
+local vector2x4Table = {}
 do
 	function dump(o)
 		if type(o) == 'table' then
@@ -152,16 +153,12 @@ do
 		end
 	end
 
-	Renderer = {}; Renderer.__index = Renderer
+	Renderer = {}
 
-	function Renderer:new(rChunkX:number,rChunkY:number)
-		local newRenderer = {}
-		setmetatable(newRenderer,Renderer)
-
-		newRenderer.label1 = createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2-1,rChunkY))
-		newRenderer.label2 = createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY))
-
-		return newRenderer
+	function Renderer.new(rChunkX:number,rChunkY:number)
+		local label1,label2 = createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2-1,rChunkY)),
+			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY));
+		return setmetatable({label1,label2},{__call=Renderer.set2PropertiesFunction('ImageRectOffset',label1,label2)})
 	end
 
 	function Renderer.getInitPDict(cX,cY)
@@ -179,13 +176,26 @@ do
 			ImageRectOffset = Vector2.new(0,0),
 		}
 	end
-
-	function Renderer:setProps(pDictT)
-		self.label1.ImageRectOffset = pDictT[1]
-		self.label2.ImageRectOffset = pDictT[2]
-		return
+	
+	function Renderer.setPropertiesFunction(propertyName,...)
+		local screenObjects={...}
+		local __newindex=getmetatable(screenObjects[1]).__newindex
+		return function(valueT)
+			for k,v in next,valueT do
+				__newindex(screenObjects[k],propertyName,v)
+			end
+		end
 	end
-
+	
+	function Renderer.set2PropertiesFunction(propertyName,o1,o2)
+		local __newindex=getmetatable(o1).__newindex
+		return function(vT)
+			__newindex(o1,propertyName,vT[1])
+			__newindex(o2,propertyName,vT[2])
+		end
+	end
+	
+	
 	local uFilterFunctions = {
 		[1]=function(rcSl,_)
 
@@ -213,6 +223,12 @@ do
 		end
 
 		return rcSl
+	end
+
+	for x=0,255 do
+		for y=0,255 do
+			vector2x4Table[x*256+y]=Vector2.new(x*4,y*4)
+		end
 	end
 end
 
@@ -351,30 +367,16 @@ do
 			--renderers[rChunkX][rChunkY] = coroutine.wrap(InitRendererChunkA)
 			--renderers[rChunkX][rChunkY](nil,rChunkX,rChunkY)
 
-			renderers[rChunkX][rChunkY] = Renderer:new(rChunkX,rChunkY)
+			local s = Renderer:new(rChunkX,rChunkY)
 		end
 		if rChunkX%2==0 then task.wait() end
 	end
 
-	local rendererOffsets,vector2x4Table = {},{}
-	for rCX=1,widthInRChunks do
-		rendererOffsets[rCX]={}
-		for rCY=1,heightInRChunks do
-			rendererOffsets[rCX][rCY]={renderers[rCX][rCY].label1.ImageRectOffset,renderers[rCX][rCY].label2.ImageRectOffset}
-		end
-	end
-
-	for x=0,255 do
-		vector2x4Table[x]={}
-		for y=0,255 do
-			vector2x4Table[x][y]=Vector2.new(x*4,y*4)
-		end
-	end
 
 	local renderFrames = nil
 
 	do
-		local k,j=rendererOffsets,vector2x4Table
+		local k,j=renderers,vector2x4Table
 		--insertMarker_renderFrames
 	end
 
@@ -444,16 +446,14 @@ do
 		file = nil
 		updateProgress("read", 0.999)
 
-		local lChunk1,lChunk2,rendererOffsets = {},{},{}
-		for rCX=1,widthInRChunks do
-			lChunk1[rCX],lChunk2[rCX],rendererOffsets[rCX]={},{},{}
-			for rCY=1,heightInRChunks do
-				lChunk1[rCX][rCY],lChunk2[rCX][rCY]=0,0
-				rendererOffsets[rCX][rCY]={renderers[rCX][rCY].label1.ImageRectOffset,renderers[rCX][rCY].label2.ImageRectOffset}
+		local lChunk1,lChunk2 = {},{}
+		for y=1,heightInRChunks do
+			lChunk1[y],lChunk2[y]={},{}
+			for x=1,widthInRChunks do
+				lChunk1[y][x],lChunk2[y][x]=0,0
 			end
 		end
 
-		renderFrames = {}
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
@@ -467,11 +467,16 @@ do
 					local chunk1,chunk2 = builtScanline[rCX*4-3]*256+builtScanline[rCX*4-2],builtScanline[rCX*4-1]*256+builtScanline[rCX*4]
 
 					if chunk1+chunk2~=0 then
-						lChunk1[rCX][rCY],lChunk2[rCX][rCY] = bit32.bxor(chunk1,lChunk1[rCX][rCY]),bit32.bxor(chunk2,lChunk2[rCX][rCY])
+						lChunk1[rCY][rCX],lChunk2[rCY][rCX] = bit32.bxor(chunk1,lChunk1[rCY][rCX]),bit32.bxor(chunk2,lChunk2[rCY][rCX])
 						insert(renderFrames[frameI],{
-							rendererOffsets[rCX][rCY],
-							vector2x4Table[(lChunk1[rCX][rCY]%256)][fdiv(lChunk1[rCX][rCY],256)],
-							vector2x4Table[(lChunk2[rCX][rCY]%256)][fdiv(lChunk2[rCX][rCY],256)]})
+							renderers[rCX][rCY].label1,
+							renderers[rCX][rCY].label2,
+							Vector2.new(
+								(lChunk1[rCY][rCX]%256)*4,
+								fdiv(lChunk1[rCY][rCX],256)*4),
+							Vector2.new(
+								(lChunk2[rCY][rCX]%256)*4,
+								fdiv(lChunk2[rCY][rCX],256)*4)})
 					end
 				end
 			end
@@ -480,42 +485,38 @@ do
 				updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
 			end
 		end
-		updateProgress("decode", 0.999)
-		table.clear(framesData)
 	end
-
-	local batchSize = 128
+	updateProgress("decode", 0.999)
+	local batchSize = 512
 
 	local renderCoros,frameI = {},0
 
-	local function renderBatch(toRenderChunks)
-		coroutine.yield()
-		task.wait(frameI/metadata.fps)
-		for cI=1,#toRenderChunks do
-			local renderingChunk = toRenderChunks[cI]
-			local offsetProp = renderingChunk[1]
 
-			offsetProp[1] = renderingChunk[2]
-			offsetProp[2] = renderingChunk[3]
-		end
-	end
 
 	for frameI,renderChunks in next,renderFrames do
-		local frameCoro = coroutine.create(function()
-			local batchCoros = {}
-			for batchI = 1, ceil(#renderChunks/batchSize) do
-				local batchCoro = coroutine.create(renderBatch)
-				local success,err = coroutine.resume(batchCoro, table.move(renderChunks, (batchI-1)*batchSize+1, min(batchSize*batchI,#renderChunks),1,{}))
-				assert(success,err)
+		insert(renderCoros, frameI, coroutine.create(function()
+			local coroI = frameI;local renderChunks = renderChunks
 
-				batchCoros[batchI]=batchCoro
+			
+
+
+			for batchI = 1, ceil(#renderChunks/batchSize) do
+				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
+
+				task.spawn(function()
+					task.wait(frameI/metadata.fps)
+					for cI=sI,eI do
+						local renderChunk = renderChunks[cI]
+						renderChunk[1].ImageRectOffset = renderChunk[2]
+						renderChunk[3].ImageRectOffset = renderChunk[4]
+					end
+				end)
 			end
 
-			coroutine.yield()
-			for _,c in next,batchCoros do coroutine.resume(c) end
-		end);local success,err = coroutine.resume(frameCoro);assert(success,err)
 
-		insert(renderCoros, frameCoro)
+			renderCoros[coroI] = nil
+
+		end))
 		if frameI%50==0 then
 			task.wait()
 			updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
@@ -526,7 +527,7 @@ do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
-	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
+	for _,v in next,GetPartsFromPort(35,"Speaker") do v:ClearSounds() end
 	do
 		local disk=GetPartFromPort(35,"Disk")
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
