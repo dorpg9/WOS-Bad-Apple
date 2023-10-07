@@ -113,8 +113,9 @@ do
 		function WOSscreenEmulator.screenClass:GetDimensions()return self.SurfaceGUI.AbsoluteSize end end
 end
 -- Other Libraries, Classes and Functions
-local sUnpackIter, createScreenObject, Renderer, UndoFilter, b64Decode, dump
+local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,setProperty
 local vector2x4Table = {}
+
 do
 	function dump(o)
 		if type(o) == 'table' then
@@ -153,16 +154,13 @@ do
 		end
 	end
 
-	Renderer = {}
+	renderLabel = {}
 
-	function Renderer.new(rChunkX:number,rChunkY:number)
-		return setmetatable({
-			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2-1,rChunkY)),
-			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY))},
-		{})
+	function renderLabel.new(chunkX:number,chunkY:number)
+		return createScreenObject("ImageLabel", rendererFrame, renderLabel.initPDict(chunkX,chunkY))
 	end
 
-	function Renderer.getInitPDict(cX,cY)
+	function renderLabel.initPDict(cX,cY)
 		return{
 			Position=UDim2.fromScale(cSizeS.x*(cX),cSizeS.y*(cY)),
 			Size=UDim2.fromScale(cSizeS.x,cSizeS.y),
@@ -176,16 +174,6 @@ do
 			ImageRectSize = Vector2.new(4,4),
 			ImageRectOffset = Vector2.new(0,0),
 		}
-	end
-	
-	function Renderer.setPropertiesFunction(propertyName,...)
-		local screenObjects={...}
-		local __newindex=getmetatable(screenObjects[1]).__newindex
-		return function(valueT)
-			for k,v in next,valueT do
-				__newindex(screenObjects[k],propertyName,v)
-			end
-		end
 	end
 
 	function undoFilter(method, rcSl, pSl) --result scanline Is the current scanline
@@ -324,6 +312,7 @@ do
 	for screenName,screen in screens do
 		subScreen[screenName] = screen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
 	end
+	setProperty = getmetatable(subScreen.mainScreen).__newindex
 
 	print("Attempting Download")
 
@@ -343,25 +332,25 @@ do
 
 	InitGUI()
 
-	local renderers = {}
-	for rChunkX=1,widthInRChunks do
-		renderers[rChunkX]={}
-		print("Building Screen Object: "..tostring(rChunkX)*heightInRChunks)
-		for rChunkY=1,heightInRChunks do
+	local rendererLabels = {}
+	for chunkX=1,widthInChunks do
+		print("Building Screen Object: "..tostring(chunkX)*heightInRChunks)
+		for chunkY=1,heightInChunks do
 
 			--renderers[rChunkX][rChunkY] = coroutine.wrap(InitRendererChunkA)
 			--renderers[rChunkX][rChunkY](nil,rChunkX,rChunkY)
 
-			renderers[rChunkX][rChunkY] = Renderer.new(rChunkX,rChunkY)
+			--labelRow[chunkY] = renderLabel.new(chunkX,chunkY)
+			rendererLabels[("%s-%s"):format(chunkX,chunkY)]=renderLabel.new(chunkX,chunkY)
 		end
-		if rChunkX%2==0 then task.wait() end
+		if chunkX%2==0 then task.wait() end
 	end
 
 
 	local renderFrames = nil
 
 	do
-		local k,j=renderers,vector2x4Table
+		local k,j=rendererLabels,vector2x4Table
 		--insertMarker_renderFrames
 	end
 
@@ -439,6 +428,7 @@ do
 			end
 		end
 
+		local bxor,asRLIndex = bit32.bxor,function(x,y)return("%s-%s"):format(x,y)end
 		renderFrames=renderFrames or {}
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
@@ -454,11 +444,12 @@ do
 
 					if builtChunk1+builtChunk2~=0 then
 						local chunksHere = lastChunks[rCY][rCX]
-						chunksHere[1],chunksHere[2] = bit32.bxor(builtChunk1,chunksHere[1]),bit32.bxor(builtChunk2,chunksHere[2])
+						chunksHere[1],chunksHere[2] = bxor(builtChunk1,chunksHere[1]),bxor(builtChunk2,chunksHere[2])
 						insert(renderFrames[frameI],{
-							renderers[rCX][rCY][1],
-							renderers[rCX][rCY][2],
-							vector2x4Table[chunksHere[1]%256][fdiv(chunksHere[1],256)],
+							asRLIndex(rCX*2-1,rCY),
+							vector2x4Table[chunksHere[1]%256][fdiv(chunksHere[1],256)]})
+						insert(renderFrames[frameI],{
+							asRLIndex(rCX*2,rCY),
 							vector2x4Table[chunksHere[2]%256][fdiv(chunksHere[2],256)]})
 					end
 				end
@@ -482,8 +473,7 @@ do
 				task.wait(frameI/metadata.fps)
 				for cI=sI,eI do
 					local renderChunk = renderChunks[cI]
-					renderChunk[1].ImageRectOffset = renderChunk[3]
-					renderChunk[2].ImageRectOffset = renderChunk[4]
+					setProperty(rendererLabels[renderChunk[1]],'ImageRectOffset',renderChunk[2])
 				end
 			end))
 		end
