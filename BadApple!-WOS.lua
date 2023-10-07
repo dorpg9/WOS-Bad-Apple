@@ -439,6 +439,7 @@ do
 			end
 		end
 
+		renderFrames=renderFrames or {}
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
