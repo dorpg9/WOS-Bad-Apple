@@ -156,10 +156,10 @@ do
 	Renderer = {}
 
 	function Renderer.new(rChunkX:number,rChunkY:number)
-		local label1,label2 = 
+		return setmetatable({
 			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2-1,rChunkY)),
-			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY))
-		return setmetatable({label1,label2},{})
+			createScreenObject("ImageLabel", rendererFrame, Renderer.getInitPDict(rChunkX*2,rChunkY))},
+		{})
 	end
 
 	function Renderer.getInitPDict(cX,cY)
@@ -352,7 +352,7 @@ do
 			--renderers[rChunkX][rChunkY] = coroutine.wrap(InitRendererChunkA)
 			--renderers[rChunkX][rChunkY](nil,rChunkX,rChunkY)
 
-			local s = Renderer:new(rChunkX,rChunkY)
+			renderers[rChunkX][rChunkY] = Renderer.new(rChunkX,rChunkY)
 		end
 		if rChunkX%2==0 then task.wait() end
 	end
