@@ -210,6 +210,7 @@ do
 	end
 
 	for x=0,255 do
+		vector2x4Table[x]={}
 		for y=0,255 do
 			vector2x4Table[x][y]=Vector2.new(x*4,y*4)
 		end
