@@ -29,7 +29,7 @@ fileStringGet = fileStringGet or nil
 -- Waste of Space Integration
 local GetRequest, PostRequest, doTheThing, GetRun
 
-local screens, subScreen, buildScreens = {},{},{}
+local screens, subScreen = {},{}
 local updateProgress, progressFrame, rendererFrame, decor
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
@@ -113,7 +113,7 @@ do
 		function WOSscreenEmulator.screenClass:GetDimensions()return self.SurfaceGUI.AbsoluteSize end end
 end
 -- Other Libraries, Classes and Functions
-local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,setProperty
+local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,SetProperty,Clone
 local vector2x4Table = {}
 
 do
@@ -130,18 +130,15 @@ do
 		end
 	end
 
+	local baseTypes = {}
 	createScreenObject = function(className, parent, properties)
 		if type(parent)=="string" then parent = subScreen[parent] end
 
-		local obj=nil
-		for _,bScreen in next,buildScreens do
-			obj = bScreen:CreateElement(className, properties)
-			if obj then break end
-		end
+		if not baseTypes[className] then baseTypes[className]=screens.buildScreen:CreateElement(className,{Parent=nil}) end
+		local obj = Clone(baseTypes[className])
 
-		assert(obj,[[cSO encountered an error:
-		nil.]])
-		parent:AddChild(obj)
+		assert(obj,"cSO encountered an error:\nnil.")
+		parent:AddChild(obj);obj:ChangeProperties(properties)
 		return obj
 	end
 
@@ -303,16 +300,16 @@ do
 
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
 	screens["mainScreen"] = GetPartFromPort(1, "Screen")
-	buildScreens = GetPartsFromPort(2, "Screen")
+	screens["buildScreen"] = GetPartFromPort(2, "Screen")
 
 	for _,screen in screens do screen:ClearElements() end
-	for _,bScreen in next,buildScreens do bScreen:ClearElements() end
 
 	subScreen = {}
 	for screenName,screen in screens do
 		subScreen[screenName] = screen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
 	end
-	setProperty = getmetatable(subScreen.mainScreen).__newindex
+	SetProperty = getmetatable(subScreen.mainScreen).__newindex
+	Clone = getmetatable(subScreen.mainScreen).Clone
 
 	print("Attempting Download")
 
@@ -461,9 +458,10 @@ do
 		end
 	end
 	updateProgress("decode", 0.999)
-	local batchSize = 256
+	local batchSize = 128
 
 	local renderCoros,frameI = {},0
+
 
 	for frameI,renderChunks in next,renderFrames do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
@@ -473,7 +471,7 @@ do
 				task.wait(frameI/metadata.fps)
 				for cI=sI,eI do
 					local renderChunk = renderChunks[cI]
-					setProperty(rendererLabels[renderChunk[1]],'ImageRectOffset',renderChunk[2])
+					SetProperty(rendererLabels[renderChunk[1]],'ImageRectOffset',renderChunk[2])
 				end
 			end))
 		end
