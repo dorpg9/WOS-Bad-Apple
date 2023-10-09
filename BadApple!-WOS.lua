@@ -460,8 +460,9 @@ do
 	updateProgress("decode", 0.999)
 	local batchSize = 128
 
-	local renderCoros,frameI = {},0
-
+	local renderCoros = {}
+	local rendererMicros = GetPartsFromPort(71,'Microcontroller')
+	if not rendererMicros[1] then rendererMicros = nil end
 
 	for frameI,renderChunks in next,renderFrames do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
