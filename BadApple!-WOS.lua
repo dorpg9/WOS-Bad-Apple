@@ -460,21 +460,22 @@ do
 	updateProgress("decode", 0.999)
 	local batchSize = 128
 
-	local renderCoros = {}
-	local rendererMicros = GetPartsFromPort(71,'Microcontroller')
-	if not rendererMicros[1] then rendererMicros = nil end
+	local renderFuncs = {}
+	local rendererMicros = GetPartsFromPort(71,'Disk') and GetPartsFromPort(71,'Disk'):Read('rendererMicros') or nil
+	if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
+
 
 	for frameI,renderChunks in next,renderFrames do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
 			local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
 
-			insert(renderCoros, coroutine.create(function()
+			insert(renderFuncs, function()
 				task.wait(frameI/metadata.fps)
 				for cI=sI,eI do
 					local renderChunk = renderChunks[cI]
 					SetProperty(rendererLabels[renderChunk[1]],'ImageRectOffset',renderChunk[2])
 				end
-			end))
+			end)
 		end
 --[[		insert(renderCoros, frameI, coroutine.create(function()
 			for batchI = 1, ceil(#renderChunks/batchSize) do
@@ -495,6 +496,29 @@ do
 			updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 		end
 	end
+
+	local renderCoros = {}
+	if rendererMicros then
+		local assignedFuncs,microCount = {},0
+		local microsNumeral = {}
+		for _ in pairs(rendererMicros) do microCount=microCount+1 end
+
+		for i,renderFunc in renderFuncs do
+			if not assignedFuncs[i%microCount+1] then assignedFuncs[i%microCount+1] = {} end
+			insert(assignedFuncs,renderFunc)
+		end
+
+		for _,funcTable in assignedFuncs do
+			table.insert(renderCoros,coroutine.create(function()
+				for _,run in rendererMicros do
+					run(function()for _,f in funcTable do coroutine.wrap(f)()end end)
+				end
+			end))
+		end
+	else
+		for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
+	end
+
 	updateProgress("construct", 0.999, "Finishing up...")
 	for _,c in pairs(renderCoros) do
 		coroutine.resume(c)
