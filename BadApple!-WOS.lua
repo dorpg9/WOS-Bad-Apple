@@ -461,7 +461,7 @@ do
 	local batchSize = 128
 
 	local renderFuncs = {}
-	local rendererMicros = GetPartsFromPort(71,'Disk')~=nil and GetPartsFromPort(71,'Disk'):Read('rendererMicros') or nil
+	local rendererMicros = GetPartFromPort(71,'Disk')~=nil and GetPartFromPort(71,'Disk'):Read('rendererMicros') or nil
 	if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
 
 
