@@ -117,18 +117,11 @@ local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,
 local vector2x4Table = {}
 
 do
-	function dump(o)
-		if type(o) == 'table' then
-			local s = '{ '
-			for k,v in pairs(o) do
-				if type(k) ~= 'number' then k = '"'..k..'"' end
-				s = s .. '['..k..'] = ' .. dump(v) .. ','
-			end
-			return s .. '} '
-		else
-			return tostring(o)
-		end
-	end
+	function dump(a)if type(a):find('^ta')then
+	local b='{'..dump(getmetatable(a))..'@'
+	for c,d in next,a do b=b..('[%s]=%s,'):format(
+	tonumber(c)or'"'..c..'"',dump(d))end;return b..'}'
+	else return tostring(a)end end
 
 	local baseTypes = {}
 	createScreenObject = function(className, parent, properties)
@@ -508,7 +501,7 @@ do
 			insert(assignedCoros,coroutine.create(renderFunc))
 		end
 
-		local id = nil
+		local id,_ = next(rendererMicros,nil)
 		for _,coros in next,assignedCoros do
 			id,_ = next(rendererMicros,id)
 			rendererMicros[id] = function()
