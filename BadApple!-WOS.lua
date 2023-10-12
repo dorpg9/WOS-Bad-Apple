@@ -461,7 +461,8 @@ do
 	local batchSize = 128
 
 	local renderFuncs = {}
-	local rendererMicros = GetPartFromPort(71,'Disk')~=nil and GetPartFromPort(71,'Disk'):Read('rendererMicros') or nil
+	local disk = GetPartFromPort(71,'Disk')
+	local rendererMicros = disk and disk:Read('rendererMicros') or nil
 	if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
 
 
@@ -498,23 +499,25 @@ do
 	end
 
 	local renderCoros = {}
-	if rendererMicros then
-		local assignedFuncs,microCount = {},0
-		local microsNumeral = {}
+	if disk and rendererMicros then
+		local assignedCoros,microCount = {},0
 		for _ in pairs(rendererMicros) do microCount=microCount+1 end
 
 		for i,renderFunc in renderFuncs do
-			if not assignedFuncs[i%microCount+1] then assignedFuncs[i%microCount+1] = {} end
-			insert(assignedFuncs,renderFunc)
+			if not assignedCoros[i%microCount+1] then assignedCoros[i%microCount+1] = {} end
+			insert(assignedCoros,coroutine.create(renderFunc))
 		end
 
-		for _,funcTable in assignedFuncs do
-			table.insert(renderCoros,coroutine.create(function()
-				for _,run in rendererMicros do
-					run(function()for _,f in funcTable do coroutine.wrap(f)()end end)
+		local id = nil
+		for _,coros in next,assignedCoros do
+			id,_ = next(rendererMicros,id)
+			rendererMicros[id] = function()
+				for _,c in coros do
+					coroutine.resume(c)
 				end
-			end))
+			end
 		end
+		renderCoros[1]=coroutine.create(function()disk:Configure({Heavy='Dead'})end)
 	else
 		for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
 	end
