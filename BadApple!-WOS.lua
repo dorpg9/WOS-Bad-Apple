@@ -494,16 +494,18 @@ do
 	local renderCoros = {}
 	if disk and rendererMicros then
 		local assignedCoros,microCount = {},0
-		for _ in pairs(rendererMicros) do microCount=microCount+1 end
+		for k,_ in pairs(rendererMicros) do
+			microCount=microCount+1
+			assignedCoros[microCount]=setmetatable({},{__index={id=k}})
+		end
 
 		for i,renderFunc in renderFuncs do
 			if not assignedCoros[i%microCount+1] then assignedCoros[i%microCount+1] = {} end
-			insert(assignedCoros,coroutine.create(renderFunc))
+			insert(assignedCoros[i%microCount+1],coroutine.create(renderFunc))
 		end
 
-		local id,_ = next(rendererMicros,nil)
 		for _,coros in next,assignedCoros do
-			id,_ = next(rendererMicros,id)
+			local id = coros.id
 			rendererMicros[id] = function()
 				for _,c in coros do
 					coroutine.resume(c)
