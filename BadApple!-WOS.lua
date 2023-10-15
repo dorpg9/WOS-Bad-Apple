@@ -460,10 +460,9 @@ do
 
 	local propertyTables = {}
 
-	local function SetRectOffset(targetLabel,value)
-		local key = value.X*65536+value.Y
+	local function SetRectOffset(targetLabel,key)
 		if not propertyTables[key] then
-			propertyTables[key] = {['ImageRectOffset']=value}
+			propertyTables[key] = {['ImageRectOffset']=Vector2.new(fdiv(key,1024),key%1024)}
 		end
 		SetPropertyTable(targetLabel,propertyTables[key])
 	end
@@ -472,11 +471,17 @@ do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
 			local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
 
+			local toRender = {table.create(eI-sI,true)}
+			for cI=sI,eI do
+				local renderChunk = renderChunks[cI]
+				toRender[cI-sI+1] = {renderChunk[1],renderChunk[2].X*1024+renderChunk[2].Y}
+			end
+
 			insert(renderFuncs, function()
 				task.wait(frameI/metadata.fps)
-				for cI=sI,eI do
-					local renderChunk = renderChunks[cI]
-					SetRectOffset(rendererLabels[renderChunk[1]],renderChunk[2])
+				for i=1,#toRender do
+					local rendering = toRender[i]
+					SetRectOffset(rendering[1],rendering[2])
 				end
 			end)
 		end
