@@ -114,7 +114,7 @@ do
 end
 -- Other Libraries, Classes and Functions
 local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,SetProperty,SetPropertyTable,Clone
-local vector2x4Table = {}
+local SetOffsetTable = {}
 
 do
 	function dump(a)if type(a):find('^ta')then
@@ -188,9 +188,9 @@ do
 	end
 
 	for x=0,255 do
-		vector2x4Table[x]={}
+		SetOffsetTable[x]={}
 		for y=0,255 do
-			vector2x4Table[x][y]=Vector2.new(x*4,y*4)
+			SetOffsetTable[x][y]={ImageRectOffset = Vector2.new(x*4,y*4)}
 		end
 	end
 end
@@ -340,7 +340,7 @@ do
 	local renderFrames = nil
 
 	do
-		local k,j=rendererLabels,vector2x4Table
+		local k,j=rendererLabels,SetOffsetTable
 		--insertMarker_renderFrames
 	end
 
@@ -437,10 +437,10 @@ do
 						chunksHere[1],chunksHere[2] = bxor(builtChunk1,chunksHere[1]),bxor(builtChunk2,chunksHere[2])
 						insert(renderFrames[frameI],{
 							asRLIndex(rCX*2-1,rCY),
-							vector2x4Table[chunksHere[1]%256][fdiv(chunksHere[1],256)]})
+							SetOffsetTable[chunksHere[1]%256][fdiv(chunksHere[1],256)]})
 						insert(renderFrames[frameI],{
 							asRLIndex(rCX*2,rCY),
-							vector2x4Table[chunksHere[2]%256][fdiv(chunksHere[2],256)]})
+							SetOffsetTable[chunksHere[2]%256][fdiv(chunksHere[2],256)]})
 					end
 				end
 			end
@@ -457,15 +457,7 @@ do
 	local disk = GetPartFromPort(71,'Disk')
 	--local rendererMicros = disk and disk:Read('rendererMicros') or nil
 	--if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
-
-	local propertyTables = {}
-	local function SetRectOffset(targetLabel,value)
-		if not propertyTables[value] then
-			propertyTables[value] = {['ImageRectOffset']=value}
-		end
-		SetPropertyTable(targetLabel,propertyTables[value])
-	end
-
+	
 	for frameI,renderChunks in next,renderFrames do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
 			local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
@@ -474,7 +466,7 @@ do
 				task.wait(frameI/metadata.fps)
 				for cI=sI,eI do
 					local renderChunk = renderChunks[cI]
-					SetRectOffset(rendererLabels[renderChunk[1]],renderChunk[2])
+					SetPropertyTable(rendererLabels[renderChunk[1]],renderChunk[2])
 				end
 			end)
 		end
