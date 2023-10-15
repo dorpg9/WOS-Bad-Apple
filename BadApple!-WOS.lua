@@ -459,11 +459,13 @@ do
 	--if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
 
 	local propertyTables = {}
+
 	local function SetRectOffset(targetLabel,value)
-		if not propertyTables[value] then
-			propertyTables[value] = {['ImageRectOffset']=value}
+		local key = value.X*65536+value.Y
+		if not propertyTables[key] then
+			propertyTables[key] = {['ImageRectOffset']=value}
 		end
-		SetPropertyTable(targetLabel,propertyTables[value])
+		SetPropertyTable(targetLabel,propertyTables[key])
 	end
 
 	for frameI,renderChunks in next,renderFrames do
