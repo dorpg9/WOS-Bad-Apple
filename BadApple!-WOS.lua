@@ -113,7 +113,7 @@ do
 		function WOSscreenEmulator.screenClass:GetDimensions()return self.SurfaceGUI.AbsoluteSize end end
 end
 -- Other Libraries, Classes and Functions
-local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,SetProperty,Clone
+local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,SetProperty,SetPropertyTable,Clone
 local vector2x4Table = {}
 
 do
@@ -301,7 +301,7 @@ do
 	for screenName,screen in screens do
 		subScreen[screenName] = screen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
 	end
-	SetProperty = getmetatable(subScreen.mainScreen).__newindex
+	SetPropertyTable = getmetatable(subScreen.mainScreen).ChangeProperties
 	Clone = getmetatable(subScreen.mainScreen).Clone
 
 	print("Attempting Download")
@@ -455,9 +455,16 @@ do
 
 	local renderFuncs = {}
 	local disk = GetPartFromPort(71,'Disk')
-	local rendererMicros = disk and disk:Read('rendererMicros') or nil
-	if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
+	--local rendererMicros = disk and disk:Read('rendererMicros') or nil
+	--if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
 
+	local propertyTables = {}
+	local function SetRectOffset(targetLabel,value)
+		if not propertyTables[value] then
+			propertyTables[value] = {['ImageRectOffset']=value}
+		end
+		SetPropertyTable(targetLabel,propertyTables[value])
+	end
 
 	for frameI,renderChunks in next,renderFrames do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
@@ -467,7 +474,7 @@ do
 				task.wait(frameI/metadata.fps)
 				for cI=sI,eI do
 					local renderChunk = renderChunks[cI]
-					SetProperty(rendererLabels[renderChunk[1]],'ImageRectOffset',renderChunk[2])
+					SetRectOffset(rendererLabels[renderChunk[1]],renderChunk[2])
 				end
 			end)
 		end
@@ -492,7 +499,7 @@ do
 	end
 
 	local renderCoros = {}
-	if disk and rendererMicros then
+	--[[if disk and rendererMicros then
 		local assignedCoros,microCount = {},0
 		for k,_ in pairs(rendererMicros) do
 			microCount=microCount+1
@@ -513,9 +520,9 @@ do
 			end
 		end
 		renderCoros[1]=coroutine.create(function()disk:Configure({Heavy='Dead'})end)
-	else
+	else]]
 		for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
-	end
+	--end
 
 	updateProgress("construct", 0.999, "Finishing up...")
 	for _,c in pairs(renderCoros) do
