@@ -30,7 +30,7 @@ fileStringGet = fileStringGet or nil
 local GetRequest, PostRequest, doTheThing, GetRun
 
 local screens, subScreen = {},{}
-local updateProgress, progressFrame, rendererFrame, decor
+local updateProgress, progressFrame, rendererFrame, decor, disk
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
 local mSSize, rFSize, rCSize, cSize, cSizeS = {},{},{},{},{}
@@ -294,6 +294,7 @@ do
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
 	screens["mainScreen"] = GetPartFromPort(1, "Screen")
 	screens["buildScreen"] = GetPartFromPort(2, "Screen")
+	disk=GetPartFromPort(35,"Disk")
 
 	for _,screen in screens do screen:ClearElements() end
 
@@ -336,15 +337,9 @@ do
 		if chunkX%2==0 then task.wait() end
 	end
 
+	local renderFuncs = disk:Read("renderFuncs")
 
-	local renderFrames = nil
-
-	do
-		local k,j=rendererLabels,SetOffsetTable
-		--insertMarker_renderFrames
-	end
-
-	if not renderFrames then
+	if not renderFuncs then
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
@@ -419,7 +414,7 @@ do
 		end
 
 		local bxor,asRLIndex = bit32.bxor,function(x,y)return("%s-%s"):format(x,y)end
-		renderFrames=renderFrames or {}
+		local renderFrames = {}
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
@@ -449,73 +444,35 @@ do
 				updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
 			end
 		end
-	end
-	updateProgress("decode", 0.999)
-	local batchSize = 128
-
-	local renderFuncs = {}
-	local disk = GetPartFromPort(71,'Disk')
-	--local rendererMicros = disk and disk:Read('rendererMicros') or nil
-	--if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
+		updateProgress("decode", 0.999)
+		local batchSize = 128
 	
-	for frameI,renderChunks in next,renderFrames do
-		for batchI = 1, ceil(#renderChunks/batchSize) do
-			local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
-
-			insert(renderFuncs, function()
-				task.wait(frameI/metadata.fps)
-				for cI=sI,eI do
-					local renderChunk = renderChunks[cI]
-					SetPropertyTable(rendererLabels[renderChunk[1]],renderChunk[2])
-				end
-			end)
-		end
---[[		insert(renderCoros, frameI, coroutine.create(function()
+		for frameI,renderChunks in next,renderFrames do
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
-
-				task.spawn(function()
+	
+				insert(renderFuncs, function()
 					task.wait(frameI/metadata.fps)
 					for cI=sI,eI do
 						local renderChunk = renderChunks[cI]
-						renderChunk[1].ImageRectOffset = renderChunk[2]
-						renderChunk[3].ImageRectOffset = renderChunk[4]
+						SetPropertyTable(rendererLabels[renderChunk[1]],renderChunk[2])
 					end
 				end)
 			end
-		end))]]
-		if frameI%50==0 then
-			task.wait()
-			updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
+	
+			if frameI%50==0 then
+				task.wait()
+				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
+			end
 		end
+		disk:Write("RenderFuncs",renderFuncs)
 	end
 
 	local renderCoros = {}
-	--[[if disk and rendererMicros then
-		local assignedCoros,microCount = {},0
-		for k,_ in pairs(rendererMicros) do
-			microCount=microCount+1
-			assignedCoros[microCount]=setmetatable({},{__index={id=k}})
-		end
+	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
 
-		for i,renderFunc in renderFuncs do
-			if not assignedCoros[i%microCount+1] then assignedCoros[i%microCount+1] = {} end
-			insert(assignedCoros[i%microCount+1],coroutine.create(renderFunc))
-		end
-
-		for _,coros in next,assignedCoros do
-			local id = coros.id
-			rendererMicros[id] = function()
-				for _,c in coros do
-					coroutine.resume(c)
-				end
-			end
-		end
-		renderCoros[1]=coroutine.create(function()disk:Configure({Heavy='Dead'})end)
-	else]]
-		for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
-	--end
-
+	updateProgress("read", 0.999)
+	updateProgress("decode", 0.999)
 	updateProgress("construct", 0.999, "Finishing up...")
 	for _,c in pairs(renderCoros) do
 		coroutine.resume(c)
@@ -523,7 +480,6 @@ do
 	updateProgress("demoman")
 	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
 	do
-		local disk=GetPartFromPort(35,"Disk")
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
 		disk:Write('midiCoroutines', nil)
 	end
