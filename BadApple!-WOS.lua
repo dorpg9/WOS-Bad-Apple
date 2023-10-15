@@ -459,29 +459,22 @@ do
 	--if rendererMicros and not next(rendererMicros) then rendererMicros = nil end
 
 	local propertyTables = {}
-
-	local function SetRectOffset(targetLabel,key)
-		if not propertyTables[key] then
-			propertyTables[key] = {['ImageRectOffset']=Vector2.new(fdiv(key,65536),key%65536)}
+	local function SetRectOffset(targetLabel,value)
+		if not propertyTables[value] then
+			propertyTables[value] = {['ImageRectOffset']=value}
 		end
-		SetPropertyTable(targetLabel,propertyTables[key])
+		SetPropertyTable(targetLabel,propertyTables[value])
 	end
 
 	for frameI,renderChunks in next,renderFrames do
 		for batchI = 1, ceil(#renderChunks/batchSize) do
 			local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
 
-			local toRender = {}
-			for cI=sI,eI do
-				local renderChunk = renderChunks[cI]
-				insert(toRender,{renderChunk[1],renderChunk[2].X*65536+renderChunk[2].Y})
-			end
-
 			insert(renderFuncs, function()
 				task.wait(frameI/metadata.fps)
-				for i=1,#toRender do
-					local rendering = toRender[i]
-					SetRectOffset(rendering[1],rendering[2])
+				for cI=sI,eI do
+					local renderChunk = renderChunks[cI]
+					SetRectOffset(rendererLabels[renderChunk[1]],renderChunk[2])
 				end
 			end)
 		end
