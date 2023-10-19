@@ -439,7 +439,7 @@ do
 		local renderFrames = {}
 
 		for frameI,frame in pairs(framesData) do
-			if frameI%4==0 and frameI>=metadata.frameCount-1 then
+			if frameI%4==0 or frameI>=metadata.frameCount-1 then
 				renderFrames[frameI] = {}
 				for _,v in next,accChunks do
 					insert(renderFrames[frameI],v[1])
