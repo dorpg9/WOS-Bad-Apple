@@ -449,7 +449,6 @@ do
 		local batchSize = 128
 	
 		for frameI,renderChunks in next,renderFrames do
-			if not frameI%3==0 then continue end
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
 				
