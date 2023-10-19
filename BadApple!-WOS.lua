@@ -331,8 +331,6 @@ do
 	widthInRChunks = ceil(widthInChunks/2)
 	heightInRChunks = heightInChunks
 
-
-
 	InitGUI()
 
 	local rendererLabels = {}
@@ -349,6 +347,14 @@ do
 		if chunkX%2==0 then task.wait() end
 	end
 	--pushFrame()
+
+	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
+	for sI,auxScreen in pairs(auxScreens) do
+		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
+		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
+			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+		end
+	end
 
 	local renderFuncs = {}
 
@@ -483,14 +489,6 @@ do
 			end
 		end
 		disk:Write("RenderFuncs",renderFuncs)
-	end
-
-	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
-	for sI,auxScreen in pairs(auxScreens) do
-		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
-		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
-			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
-		end
 	end
 
 	local renderCoros = {}
