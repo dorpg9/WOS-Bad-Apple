@@ -412,11 +412,13 @@ do
 		file = nil
 		updateProgress("read", 0.999)
 
-		local lastChunks = {}
+		local lastChunks,accChunks = {},{}
 		for y=1,heightInRChunks do
 			lastChunks[y]={}
+			accChunks[y]={}
 			for x=1,widthInRChunks do
 				lastChunks[y][x]={0,0}
+				accChunks[y][x]={0,0}
 			end
 		end
 
