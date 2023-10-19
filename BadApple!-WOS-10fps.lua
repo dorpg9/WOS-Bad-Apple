@@ -221,8 +221,10 @@ local function InitGUI()
 		BackgroundTransparency = 1,
 	})
 
+	local nowFrame = {}
 	pushFrame = function()
-		subScreen.mainScreen:AddChild(Clone(rendererFrame))
+		if nowFrame.Destroy then nowFrame:Destroy() end
+		nowFrame = subScreen.mainScreen:AddChild(Clone(rendererFrame))
 	end
 
 	progressFrame = createScreenObject("Frame", 'mainScreen', {
