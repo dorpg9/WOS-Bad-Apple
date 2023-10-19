@@ -131,7 +131,7 @@ do
 		local obj = Clone(baseTypes[className])
 
 		assert(obj,"cSO encountered an error:\nnil.")
-		parent:AddChild(obj);obj:ChangeProperties(properties)
+		if parent then parent:AddChild(obj)end;obj:ChangeProperties(properties) 
 		return obj
 	end
 
@@ -212,14 +212,16 @@ local function InitGUI()
 	cSize={x=rFSize.x/widthInChunks, y=rFSize.y/heightInChunks}
 	cSizeS={x=4/metadata.width,y=4/metadata.height}
 
-	rendererFrame = createScreenObject("Frame", 'mainScreen', {
+	rendererFrame = setmetatable(createScreenObject("Frame", nil, {
 		Name = "Bad Apple!",
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
-	})
+	}),{__index={pushFrame = function(self)
+		subScreen.mainScreen:AddChild(self:Clone())
+	end}})
 
 	progressFrame = createScreenObject("Frame", 'mainScreen', {
 		Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -336,6 +338,7 @@ do
 		end
 		if chunkX%2==0 then task.wait() end
 	end
+	rendererFrame:pushFrame()
 
 	local renderFuncs = {}
 
@@ -450,6 +453,7 @@ do
 		for frameI,renderChunks in next,renderFrames do
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
+				local renderChunksLength = #renderChunks
 	
 				insert(renderFuncs, function()
 					task.wait(frameI/metadata.fps)
@@ -459,7 +463,10 @@ do
 					end
 				end)
 			end
-	
+			insert(renderFuncs, function()
+				task.wait(frameI/metadata.fps+0.25)
+				rendererFrame:pushFrame()
+			end)
 			if frameI%50==0 then
 				task.wait()
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
