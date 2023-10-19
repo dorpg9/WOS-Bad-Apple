@@ -517,7 +517,7 @@ do
 
 	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
 	do
-		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
+		for _,v in pairs(disk:Read('midiCoroutines') or {}) do coroutine.resume(v) end
 		disk:Write('midiCoroutines', nil)
 	end
 
