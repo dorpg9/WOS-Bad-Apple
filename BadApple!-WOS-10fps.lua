@@ -354,6 +354,7 @@ do
 		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
 		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
 			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+			task.wait()
 		end
 		auxSubscreens[sI]=aSubscreen
 	end
@@ -438,7 +439,7 @@ do
 		local renderFrames = {}
 
 		for frameI,frame in pairs(framesData) do
-			if frameI%4==0 or frameI>=metadata.frameCount-1 then
+			if frameI%4==0 and frameI>=metadata.frameCount-1 then
 				renderFrames[frameI] = {}
 				for _,v in next,accChunks do
 					insert(renderFrames[frameI],v[1])
