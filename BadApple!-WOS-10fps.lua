@@ -438,14 +438,14 @@ do
 		local renderFrames = {}
 
 		for frameI,frame in pairs(framesData) do
-			if frameI%4==0 then
+			if frameI%4==0 or frameI>=metadata.frameCount-1 then
 				for _,v in next,accChunks do
 					insert(renderFrames[frameI],v[1])
 					insert(renderFrames[frameI],v[2])
 				end
 				table.clear(accChunks)
 			end
-			
+
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
 
