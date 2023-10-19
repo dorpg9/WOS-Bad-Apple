@@ -351,7 +351,7 @@ do
 
 	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
 	for sI,auxScreen in pairs(auxScreens) do
-		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=0.5})
+		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
 		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
 			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
 		end
@@ -505,7 +505,6 @@ do
 	updateProgress("read", 0.999)
 	updateProgress("decode", 0.999)
 	updateProgress("construct", 0.999, "Finishing up...")
-	for _,s in next,auxSubscreens do s:ChangeProperties({Transparency=0}) end
 	for _,c in pairs(renderCoros) do
 		coroutine.resume(c)
 	end
