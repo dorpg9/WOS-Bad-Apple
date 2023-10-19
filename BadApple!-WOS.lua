@@ -220,7 +220,7 @@ local function InitGUI()
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
 	}),{__index={pushFrame = function(self)
-		subScreen.mainScreen:AddChild(self:Clone())
+		subScreen.mainScreen:AddChild(Clone(self))
 	end}})
 
 	progressFrame = createScreenObject("Frame", 'mainScreen', {
