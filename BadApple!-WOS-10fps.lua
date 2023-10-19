@@ -438,6 +438,14 @@ do
 		local renderFrames = {}
 
 		for frameI,frame in pairs(framesData) do
+			if frameI%4==0 then
+				for _,v in next,accChunks do
+					insert(renderFrames[frameI],v[1])
+					insert(renderFrames[frameI],v[2])
+				end
+				table.clear(accChunks)
+			end
+			
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
 
@@ -463,13 +471,6 @@ do
 				end
 			end
 
-			if frameI%3==0 then
-				for _,v in next,accChunks do
-					insert(renderFrames[frameI],v[1])
-					insert(renderFrames[frameI],v[2])
-				end
-				table.clear(accChunks)
-			end
 			if frameI%10==0 then
 				task.wait()
 				updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
