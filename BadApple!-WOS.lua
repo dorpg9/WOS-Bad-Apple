@@ -212,7 +212,7 @@ local function InitGUI()
 	cSize={x=rFSize.x/widthInChunks, y=rFSize.y/heightInChunks}
 	cSizeS={x=4/metadata.width,y=4/metadata.height}
 
-	rendererFrame = createScreenObject("Frame", nil, {
+	rendererFrame = createScreenObject("Frame", 'mainScreen', {
 		Name = "Bad Apple!",
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -220,12 +220,12 @@ local function InitGUI()
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
 	})
-
+--[[
 	local nowFrame = {}
 	pushFrame = function()
 		if nowFrame.Destroy then nowFrame:Destroy() end
 		nowFrame = subScreen.mainScreen:AddChild(Clone(rendererFrame))
-	end
+	end]]
 
 	progressFrame = createScreenObject("Frame", 'mainScreen', {
 		Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -342,7 +342,7 @@ do
 		end
 		if chunkX%2==0 then task.wait() end
 	end
-	pushFrame()
+	--pushFrame()
 
 	local renderFuncs = {}
 
@@ -422,6 +422,8 @@ do
 
 		local bxor,asRLIndex = bit32.bxor,function(x,y)return("%s-%s"):format(x,y)end
 		local renderFrames = {}
+		local accChunks = {}
+
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
@@ -467,10 +469,6 @@ do
 					end
 				end)
 			end
-			insert(renderFuncs, function()
-				task.wait(frameI/metadata.fps+0.25)
-				pushFrame()
-			end)
 			if frameI%50==0 then
 				task.wait()
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
