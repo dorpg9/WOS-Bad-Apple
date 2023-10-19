@@ -29,11 +29,11 @@ fileStringGet = fileStringGet or nil
 -- Waste of Space Integration
 local GetRequest, PostRequest, doTheThing, GetRun
 
-local screens, subScreen = {},{}
+local screens, subScreen, auxScreens, auxSubscreens = {},{},{},{}
 local updateProgress, progressFrame, rendererFrame, decor, disk, pushFrame
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
-local mSSize, rFSize, rCSize, cSize, cSizeS = {},{},{},{},{}
+local mSSize, rFSize, rCSize, cSize, cSizeS, mWidth = {},{},{},{},{},{}
 
 
 
@@ -147,12 +147,12 @@ do
 	renderLabel = {}
 
 	function renderLabel.new(chunkX:number,chunkY:number)
-		return createScreenObject("ImageLabel", rendererFrame, renderLabel.initPDict(chunkX,chunkY))
+		return createScreenObject("ImageLabel", 'mainScreen', renderLabel.initPDict(chunkX,chunkY))
 	end
 
 	function renderLabel.initPDict(cX,cY)
 		return{
-			Position=UDim2.fromScale(cSizeS.x*(cX),cSizeS.y*(cY)),
+			Position=UDim2.fromScale((cSize.x*(cX)+mWidth.x)/mSSize.x,(cSize.y*(cY)+mWidth.y)/mSSize.y),
 			Size=UDim2.fromScale(cSizeS.x,cSizeS.y),
 			ResampleMode=1,
 			ScaleType=2,
@@ -208,14 +208,16 @@ local function InitGUI()
 		rFSize={x=mSSize.x,y=mSSize.x/aRatio}
 	end
 
+	mWidth={x=fdiv(mSSize.x-rFSize.x,2),y=fdiv(mSSize.y-rFSize.y,2)}
+
 	rCSize={x=rFSize.x/widthInRChunks, y=rFSize.y/heightInRChunks}
 	cSize={x=rFSize.x/widthInChunks, y=rFSize.y/heightInChunks}
 	cSizeS={x=4/metadata.width,y=4/metadata.height}
 
 	rendererFrame = createScreenObject("Frame", 'mainScreen', {
 		Name = "Bad Apple!",
-		Position = UDim2.new(0.5, 0, 0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, mWidth.x, 0, mWidth.y),
+		AnchorPoint = Vector2.new(0, 0),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
@@ -298,11 +300,15 @@ do
 	screens = {}
 
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
-	screens["mainScreen"] = GetPartFromPort(1, "Screen")
+	auxScreens = GetPartsFromPort(1, "Screen")
+	screens["mainScreen"] = table.remove(auxScreens)
 	screens["buildScreen"] = GetPartFromPort(2, "Screen")
 	disk=GetPartFromPort(35,"Disk")
 
+	assert(screens.mainScreen)
+
 	for _,screen in screens do screen:ClearElements() end
+	for _,aScreen in auxScreens do aScreen:ClearElements() end
 
 	subScreen = {}
 	for screenName,screen in screens do
@@ -325,8 +331,6 @@ do
 	widthInRChunks = ceil(widthInChunks/2)
 	heightInRChunks = heightInChunks
 
-
-
 	InitGUI()
 
 	local rendererLabels = {}
@@ -343,6 +347,15 @@ do
 		if chunkX%2==0 then task.wait() end
 	end
 	--pushFrame()
+
+	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
+	for sI,auxScreen in pairs(auxScreens) do
+		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=0.5})
+		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
+			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+		end
+		auxSubscreens[sI]=aSubscreen
+	end
 
 	local renderFuncs = {}
 
@@ -415,16 +428,13 @@ do
 		local lastChunks,accChunks = {},{}
 		for y=1,heightInRChunks do
 			lastChunks[y]={}
-			accChunks[y]={}
 			for x=1,widthInRChunks do
 				lastChunks[y][x]={0,0}
-				accChunks[y][x]={0,0}
 			end
 		end
 
 		local bxor,asRLIndex = bit32.bxor,function(x,y)return("%s-%s"):format(x,y)end
 		local renderFrames = {}
-		local accChunks = {}
 
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
@@ -441,14 +451,23 @@ do
 					if builtChunk1+builtChunk2~=0 then
 						local chunksHere = lastChunks[rCY][rCX]
 						chunksHere[1],chunksHere[2] = bxor(builtChunk1,chunksHere[1]),bxor(builtChunk2,chunksHere[2])
-						insert(renderFrames[frameI],{
+						accChunks[("%s-%s"):format(rCX,rCY)] = 
+						{{
 							asRLIndex(rCX*2-1,rCY),
-							SetOffsetTable[chunksHere[1]%256][fdiv(chunksHere[1],256)]})
-						insert(renderFrames[frameI],{
+							SetOffsetTable[chunksHere[1]%256][fdiv(chunksHere[1],256)]},
+						{
 							asRLIndex(rCX*2,rCY),
-							SetOffsetTable[chunksHere[2]%256][fdiv(chunksHere[2],256)]})
+							SetOffsetTable[chunksHere[2]%256][fdiv(chunksHere[2],256)]}}
 					end
 				end
+			end
+
+			if frameI%3==0 then
+				for _,v in next,accChunks do
+					insert(renderFrames[frameI],v[1])
+					insert(renderFrames[frameI],v[2])
+				end
+				table.clear(accChunks)
 			end
 			if frameI%10==0 then
 				task.wait()
@@ -456,7 +475,7 @@ do
 			end
 		end
 		updateProgress("decode", 0.999)
-		local batchSize = 512
+		local batchSize = 65536
 		
 		for frameI,renderChunks in next,renderFrames do
 			for batchI = 1, ceil(#renderChunks/batchSize) do
@@ -485,10 +504,12 @@ do
 	updateProgress("read", 0.999)
 	updateProgress("decode", 0.999)
 	updateProgress("construct", 0.999, "Finishing up...")
+	for _,s in next,auxSubscreens do s:ChangeProperties({Transparency=0}) end
 	for _,c in pairs(renderCoros) do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
+
 	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
 	do
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end

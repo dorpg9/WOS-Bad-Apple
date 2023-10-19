@@ -29,7 +29,7 @@ fileStringGet = fileStringGet or nil
 -- Waste of Space Integration
 local GetRequest, PostRequest, doTheThing, GetRun
 
-local screens, subScreen, auxScreens = {},{},{}
+local screens, subScreen, auxScreens, auxSubscreens = {},{},{},{}
 local updateProgress, progressFrame, rendererFrame, decor, disk, pushFrame
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
@@ -350,10 +350,11 @@ do
 
 	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
 	for sI,auxScreen in pairs(auxScreens) do
-		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
+		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=0.5})
 		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
 			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
 		end
+		auxSubscreens[sI]=aSubscreen
 	end
 
 	local renderFuncs = {}
@@ -468,7 +469,7 @@ do
 			end
 		end
 		updateProgress("decode", 0.999)
-		local batchSize = 512
+		local batchSize = 65536
 		
 		for frameI,renderChunks in next,renderFrames do
 			for batchI = 1, ceil(#renderChunks/batchSize) do
@@ -497,10 +498,12 @@ do
 	updateProgress("read", 0.999)
 	updateProgress("decode", 0.999)
 	updateProgress("construct", 0.999, "Finishing up...")
+	for _,s in next,auxSubscreens do s:ChangeProperties({Transparency=0}) end
 	for _,c in pairs(renderCoros) do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
+
 	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
 	do
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
