@@ -471,6 +471,7 @@ do
 	end
 
 	local renderCoros = {}
+	renderFuncs = disk:Read("RenderFuncs")
 	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
 
 	updateProgress("read", 0.999)
