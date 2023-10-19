@@ -417,7 +417,6 @@ do
 		local renderFrames = {}
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
-			if (frameI or 0)%3~=0 then continue end
 			renderFrames[frameI] = {}
 
 
@@ -449,9 +448,10 @@ do
 		local batchSize = 128
 		
 		for frameI,renderChunks in next,renderFrames do
+			if (frameI or 1)%3~=0 then continue end
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
-				
+	
 				insert(renderFuncs, function()
 					task.wait(frameI/metadata.fps)
 					for cI=sI,eI do
@@ -466,6 +466,7 @@ do
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 			end
 		end
+		disk:Write("RenderFuncs",renderFuncs)
 	end
 
 	local renderCoros = {}
