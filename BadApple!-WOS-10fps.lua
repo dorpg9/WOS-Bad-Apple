@@ -340,6 +340,7 @@ do
 	local renderFuncs = disk:Read("renderFuncs")
 
 	if not renderFuncs then
+		renderFuncs = {}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
