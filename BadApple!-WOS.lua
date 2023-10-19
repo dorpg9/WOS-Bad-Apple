@@ -447,7 +447,8 @@ do
 		end
 		updateProgress("decode", 0.999)
 		local batchSize = 128
-	
+		
+		local renderFuncs = {}
 		for frameI,renderChunks in next,renderFrames do
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
