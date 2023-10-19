@@ -33,7 +33,7 @@ local screens, subScreen, auxScreens = {},{},{}
 local updateProgress, progressFrame, rendererFrame, decor, disk, pushFrame
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
-local mSSize, rFSize, rCSize, cSize, cSizeS = {},{},{},{},{}
+local mSSize, rFSize, rCSize, cSize, cSizeS, mWidth = {},{},{},{},{},{}
 
 
 
@@ -147,12 +147,12 @@ do
 	renderLabel = {}
 
 	function renderLabel.new(chunkX:number,chunkY:number)
-		return createScreenObject("ImageLabel", rendererFrame, renderLabel.initPDict(chunkX,chunkY))
+		return createScreenObject("ImageLabel", 'mainScreen', renderLabel.initPDict(chunkX,chunkY))
 	end
 
 	function renderLabel.initPDict(cX,cY)
 		return{
-			Position=UDim2.fromScale(cSizeS.x*(cX),cSizeS.y*(cY)),
+			Position=UDim2.fromScale(cSizeS.x*(cX)+mWidth.x,cSizeS.y*(cY)+mWidth.y),
 			Size=UDim2.fromScale(cSizeS.x,cSizeS.y),
 			ResampleMode=1,
 			ScaleType=2,
@@ -208,14 +208,16 @@ local function InitGUI()
 		rFSize={x=mSSize.x,y=mSSize.x/aRatio}
 	end
 
+	mWidth={x=fdiv(mSSize.x-rFSize.x,2),y=fdiv(mSSize.y-rFSize.y,2)}
+
 	rCSize={x=rFSize.x/widthInRChunks, y=rFSize.y/heightInRChunks}
 	cSize={x=rFSize.x/widthInChunks, y=rFSize.y/heightInChunks}
 	cSizeS={x=4/metadata.width,y=4/metadata.height}
 
 	rendererFrame = createScreenObject("Frame", 'mainScreen', {
 		Name = "Bad Apple!",
-		Position = UDim2.new(0.5, 0, 0.5, 0),
-		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, mWidth.x, 0, mWidth.y),
+		AnchorPoint = Vector2.new(0, 0),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
@@ -306,6 +308,7 @@ do
 	assert(screens.mainScreen)
 
 	for _,screen in screens do screen:ClearElements() end
+	for _,aScreen in auxScreens do aScreen:ClearElements() end
 
 	subScreen = {}
 	for screenName,screen in screens do
@@ -346,14 +349,6 @@ do
 		if chunkX%2==0 then task.wait() end
 	end
 	--pushFrame()
-
-	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
-	for sI,auxScreen in pairs(auxScreens) do
-		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
-		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
-			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
-		end
-	end
 
 	local renderFuncs = {}
 
@@ -488,6 +483,14 @@ do
 			end
 		end
 		disk:Write("RenderFuncs",renderFuncs)
+	end
+
+	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
+	for sI,auxScreen in pairs(auxScreens) do
+		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
+		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
+			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+		end
 	end
 
 	local renderCoros = {}
