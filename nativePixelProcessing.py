@@ -150,7 +150,7 @@ getUncompressedData()
 bHead = b'''local function fileStringGet(...)local payloadString = string.gsub(\"'''
 bTail = b"\",'..',function (cc)return string.char(tonumber(cc, 16))end)return payloadString end"
 
-insertFile = "BadApple!-WOS.lua"
+insertFile =[ "BadApple!-WOS.lua", "BadApple!-WOS-10fps.lua"]
 aSPath = "allString.lua"
 
 with open(aSPath,"wb") as aSFile,open(outputFilePath,'rb') as bacsFile:
@@ -167,12 +167,13 @@ with open(aSPath,"wb") as aSFile,open(outputFilePath,'rb') as bacsFile:
 dataPath = aSPath
 
 if insertFile:
-  toInsert = open(aSPath,"r").read()
-  contents = open(insertFile, 'r+').readlines()
+  for fName in insertFile:
+    toInsert = open(aSPath,"r").read()
+    contents = open(fName, 'r+').readlines()
 
-  contents[3] = toInsert + "\n"
-  open('Packed-'+insertFile,'w').writelines(contents)
-  dataPath = "Packed-"+insertFile
+    contents[3] = toInsert + "\n"
+    open('Packed-'+fName,'w').writelines(contents)
+    dataPath = "Packed-"+fName
 
 # shutil.copyfile(os.path.realpath(outputFilePath),os.path.abspath(allStringClonePath))
 # response = requests.post('https://0x0.st', files={"file":open('allString.lua', 'rb')})

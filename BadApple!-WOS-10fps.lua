@@ -417,7 +417,7 @@ do
 		local renderFrames = {}
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
-			if frameI%3~=0 then continue end
+			if (frameI or 0)%3~=0 then continue end
 			renderFrames[frameI] = {}
 
 
