@@ -131,7 +131,7 @@ do
 		local obj = Clone(baseTypes[className])
 
 		assert(obj,"cSO encountered an error:\nnil.")
-		if parent then parent:AddChild(obj)end;obj:ChangeProperties(properties) 
+		if type(parent)=="table" and parent.AddChild then parent:AddChild(obj)end;obj:ChangeProperties(properties) 
 		return obj
 	end
 
