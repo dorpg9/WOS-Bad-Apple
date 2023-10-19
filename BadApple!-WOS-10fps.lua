@@ -30,7 +30,7 @@ fileStringGet = fileStringGet or nil
 local GetRequest, PostRequest, doTheThing, GetRun
 
 local screens, subScreen = {},{}
-local updateProgress, progressFrame, rendererFrame, decor, disk
+local updateProgress, progressFrame, rendererFrame, decor, disk, pushFrame
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
 local mSSize, rFSize, rCSize, cSize, cSizeS = {},{},{},{},{}
@@ -212,16 +212,18 @@ local function InitGUI()
 	cSize={x=rFSize.x/widthInChunks, y=rFSize.y/heightInChunks}
 	cSizeS={x=4/metadata.width,y=4/metadata.height}
 
-	rendererFrame = setmetatable(createScreenObject("Frame", nil, {
+	rendererFrame = createScreenObject("Frame", nil, {
 		Name = "Bad Apple!",
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
-	}),{__index={pushFrame = function(self)
-		subScreen.mainScreen:AddChild(Clone(self))
-	end}})
+	})
+
+	pushFrame = function()
+		subScreen.mainScreen:AddChild(Clone(rendererFrame))
+	end
 
 	progressFrame = createScreenObject("Frame", 'mainScreen', {
 		Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -338,7 +340,7 @@ do
 		end
 		if chunkX%2==0 then task.wait() end
 	end
-	rendererFrame:pushFrame()
+	pushFrame()
 
 	local renderFuncs = {}
 
@@ -465,7 +467,7 @@ do
 			end
 			insert(renderFuncs, function()
 				task.wait(frameI/metadata.fps+0.25)
-				rendererFrame:pushFrame()
+				pushFrame()
 			end)
 			if frameI%50==0 then
 				task.wait()
