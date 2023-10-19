@@ -29,7 +29,7 @@ fileStringGet = fileStringGet or nil
 -- Waste of Space Integration
 local GetRequest, PostRequest, doTheThing, GetRun
 
-local screens, subScreen = {},{}
+local screens, subScreen, auxScreens = {},{},{}
 local updateProgress, progressFrame, rendererFrame, decor, disk, pushFrame
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
@@ -298,9 +298,12 @@ do
 	screens = {}
 
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
-	screens["mainScreen"] = GetPartFromPort(1, "Screen")
+	auxScreens = GetPartsFromPort(1, "Screen")
+	screens["mainScreen"] = table.remove(auxScreens)
 	screens["buildScreen"] = GetPartFromPort(2, "Screen")
 	disk=GetPartFromPort(35,"Disk")
+
+	assert(screens.mainScreen)
 
 	for _,screen in screens do screen:ClearElements() end
 
@@ -343,6 +346,14 @@ do
 		if chunkX%2==0 then task.wait() end
 	end
 	--pushFrame()
+
+	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
+	for sI,auxScreen in pairs(auxScreens) do
+		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
+		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
+			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+		end
+	end
 
 	local renderFuncs = {}
 
