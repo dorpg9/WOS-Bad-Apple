@@ -219,6 +219,7 @@ local function InitGUI()
 		Position = UDim2.new(0, mWidth.x, 0, mWidth.y),
 		AnchorPoint = Vector2.new(0, 0),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
+		Transparency = 1,
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
 	})

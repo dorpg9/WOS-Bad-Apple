@@ -217,6 +217,7 @@ local function InitGUI()
 	rendererFrame = createScreenObject("Frame", 'mainScreen', {
 		Name = "Bad Apple!",
 		Position = UDim2.new(0, mWidth.x, 0, mWidth.y),
+		Transparency = 1,
 		AnchorPoint = Vector2.new(0, 0),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
 		ClipsDescendants = true,
