@@ -498,7 +498,7 @@ do
 			end
 		end
 		insert(renderFuncs,function()
-			task.wait(28)
+			task.wait(14)
 			TriggerPort(39)
 		end)	
 		disk:Write("RenderFuncs",renderFuncs)
