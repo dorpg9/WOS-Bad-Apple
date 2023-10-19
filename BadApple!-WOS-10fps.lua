@@ -439,6 +439,7 @@ do
 
 		for frameI,frame in pairs(framesData) do
 			if frameI%4==0 or frameI>=metadata.frameCount-1 then
+				renderFrames[frameI] = {}
 				for _,v in next,accChunks do
 					insert(renderFrames[frameI],v[1])
 					insert(renderFrames[frameI],v[2])
@@ -447,8 +448,6 @@ do
 			end
 
 			if frame.frameFormat ~= 0 then continue end
-			renderFrames[frameI] = {}
-
 
 			local builtScanline
 			for rCY,slData in pairs(frame.scanlines) do
