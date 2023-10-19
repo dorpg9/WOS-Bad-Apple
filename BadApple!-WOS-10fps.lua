@@ -337,9 +337,9 @@ do
 		if chunkX%2==0 then task.wait() end
 	end
 
-	local renderFuncs = disk:Read("renderFuncs")
+	local renderFuncs = {}
 
-	if not renderFuncs then
+	do
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
@@ -448,7 +448,6 @@ do
 		updateProgress("decode", 0.999)
 		local batchSize = 128
 		
-		local renderFuncs = {}
 		for frameI,renderChunks in next,renderFrames do
 			for batchI = 1, ceil(#renderChunks/batchSize) do
 				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
@@ -467,11 +466,9 @@ do
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 			end
 		end
-		disk:Write("RenderFuncs",renderFuncs)
 	end
 
 	local renderCoros = {}
-	renderFuncs = disk:Read("RenderFuncs")
 	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
 
 	updateProgress("read", 0.999)
