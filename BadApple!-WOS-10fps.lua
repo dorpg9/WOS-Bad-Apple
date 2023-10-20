@@ -349,11 +349,11 @@ do
 	end
 	--pushFrame()
 
-	local perHeight = ceil(heightInChunks/(#auxScreens>0 and #auxScreens or 1))
+	local perWidth = ceil(widthInChunks/(#auxScreens>0 and #auxScreens or 1))
 	for sI,auxScreen in pairs(auxScreens) do
 		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
-		for cY=sI*perHeight+1,min((sI+1)*perHeight,heightInChunks) do
-			for cX=1,widthInChunks do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+		for cY=1,heightInChunks do
+			for cX=sI*perWidth+1,min((sI+1)*perWidth,widthInChunks) do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
 			task.wait()
 		end
 		auxSubscreens[sI]=aSubscreen
