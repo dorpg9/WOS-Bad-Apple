@@ -509,7 +509,6 @@ do
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
 		disk:Write('midiCoroutines', nil)
 	end
-	TriggerPort(41)
 
 	task.wait(metadata.frameCount/metadata.fps+2)
 	print("EOF")
