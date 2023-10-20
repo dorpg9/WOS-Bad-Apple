@@ -497,10 +497,6 @@ do
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 			end
 		end
-		insert(renderFuncs,function()
-			task.wait(14)
-			TriggerPort(39)
-		end)	
 		disk:Write("RenderFuncs",renderFuncs)
 	end
 
