@@ -354,8 +354,8 @@ do
 		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
 		for cY=1,heightInChunks do
 			for cX=sI*perWidth+1,min((sI+1)*perWidth,widthInChunks) do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
-			task.wait()
 		end
+		task.wait()
 		auxSubscreens[sI]=aSubscreen
 	end
 
