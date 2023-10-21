@@ -362,7 +362,7 @@ do
 
 	local renderFuncs
 
-	if not SIDCN.BArenderFuncs then
+	if not false then
 		renderFuncs = {}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
@@ -493,7 +493,7 @@ do
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 			end
 		end
-		SIDCN.BArenderFuncs = renderFuncs
+		--SIDCN.BArenderFuncs = renderFuncs
 	else
 		renderFuncs = SIDCN.BArenderFuncs
 	end
