@@ -318,6 +318,7 @@ do
 	SetPropertyTable = getmetatable(subScreen.mainScreen).ChangeProperties
 	Clone = getmetatable(subScreen.mainScreen).Clone
 
+	SIDCN=(function(sc)local e,s=getmetatable(sc:CreateElement('Frame',{Parent=nil})),"He is my refuge and my fortress, my God, in whom I trust."return(e.SIDCN or(function()local t,d={[s]={requests={},micros={}}},{};e.SIDCN=setmetatable(d,{__metatable="";__index={SayOfTheLord=function(_,i)return(t[i])end};__newindex=function(...)end})return d;end)()):SayOfTheLord(s)end)(screens.mainScreen)
 	print("Attempting Download")
 
 	for k,v in metadata do
@@ -359,9 +360,10 @@ do
 		auxSubscreens[sI]=aSubscreen
 	end
 
-	local renderFuncs = {}
+	local renderFuncs
 
-	do
+	if not SIDCN.BArenderFuncs then
+		renderFuncs = {}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
@@ -491,7 +493,9 @@ do
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 			end
 		end
-		disk:Write("RenderFuncs",renderFuncs)
+		SIDCN.BArenderFuncs = renderFuncs
+	else
+		renderFuncs = SIDCN.BArenderFuncs
 	end
 	local renderCoros = {}
 	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
