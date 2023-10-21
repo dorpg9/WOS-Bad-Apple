@@ -303,7 +303,7 @@ do
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
 	auxScreens = GetPartsFromPort(1, "Screen")
 	screens["mainScreen"] = table.remove(auxScreens)
-	screens["buildScreen"] = GetPartFromPort(2, "Screen")
+	screens["buildScreen"] = GetPartFromPort(2, "Screen") or screens["mainScreen"]
 	disk=GetPartFromPort(35,"Disk")
 
 	assert(screens.mainScreen)
