@@ -361,8 +361,8 @@ do
 	end
 
 	local renderFuncs
-
-	if not false then
+	
+	if not SIDCN.BA then
 		renderFuncs = {}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
@@ -493,9 +493,20 @@ do
 				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
 			end
 		end
-		--SIDCN.BArenderFuncs = renderFuncs
+		SIDCN.BA = {renderFuncs=renderFuncs,rendererLabels=rendererLabels}
 	else
-		renderFuncs = SIDCN.BArenderFuncs
+		local perWidth = ceil(widthInChunks/(#auxScreens>0 and #auxScreens or 1))
+		rendererLabels = SIDCN.BA.rendererLabels
+		for sI,auxScreen in pairs(auxScreens) do
+			auxScreen:ClearElements()
+			local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
+			for cY=1,heightInChunks do
+				for cX=sI*perWidth+1,min((sI+1)*perWidth,widthInChunks) do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+			end
+			task.wait()
+			auxSubscreens[sI]=aSubscreen
+		end
+		renderFuncs = SIDCN.BA.renderFuncs
 	end
 	local renderCoros = {}
 	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
