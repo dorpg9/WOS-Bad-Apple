@@ -529,6 +529,7 @@ do
 	task.wait(metadata.frameCount/metadata.fps+2)
 	for _,v in pairs(rendererLabels) do
 		v.Parent = nil
+		task.wait()
 	end
 	print("EOF")
 end
