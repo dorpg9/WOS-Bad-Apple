@@ -324,6 +324,7 @@ do
 	for k,v in metadata do
 		print(k.." - "..v)
 	end
+	asRLIndex = function(x,y)return("%s-%s"):format(x,y)end
 
 	aRatio = metadata.width/metadata.height
 
@@ -526,5 +527,8 @@ do
 	end
 
 	task.wait(metadata.frameCount/metadata.fps+2)
+	for _,v in pairs(rendererLabels) do
+		v.Parent = nil
+	end
 	print("EOF")
 end

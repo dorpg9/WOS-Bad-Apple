@@ -217,9 +217,9 @@ local function InitGUI()
 	rendererFrame = createScreenObject("Frame", 'mainScreen', {
 		Name = "Bad Apple!",
 		Position = UDim2.new(0, mWidth.x, 0, mWidth.y),
-		Transparency = 1,
 		AnchorPoint = Vector2.new(0, 0),
 		Size = UDim2.new(0, rFSize.x, 0, rFSize.y),
+		Transparency = 1,
 		ClipsDescendants = true,
 		BackgroundTransparency = 1,
 	})
@@ -324,6 +324,7 @@ do
 	for k,v in metadata do
 		print(k.." - "..v)
 	end
+	asRLIndex = function(x,y)return("%s-%s"):format(x,y)end
 
 	aRatio = metadata.width/metadata.height
 
@@ -361,8 +362,9 @@ do
 	end
 
 	local renderFuncs
-
+	
 	if not SIDCN.BA then
+		renderFuncs = {}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
@@ -431,25 +433,21 @@ do
 		local lastChunks,accChunks = {},{}
 		for y=1,heightInRChunks do
 			lastChunks[y]={}
+			accChunks[y]={}
 			for x=1,widthInRChunks do
 				lastChunks[y][x]={0,0}
+				accChunks[y][x]={0,0}
 			end
 		end
 
 		local bxor,asRLIndex = bit32.bxor,function(x,y)return("%s-%s"):format(x,y)end
 		local renderFrames = {}
+		local accChunks = {}
 
 		for frameI,frame in pairs(framesData) do
-			if frameI%4==0 or frameI>=metadata.frameCount-1 then
-				renderFrames[frameI] = {}
-				for _,v in next,accChunks do
-					insert(renderFrames[frameI],v[1])
-					insert(renderFrames[frameI],v[2])
-				end
-				table.clear(accChunks)
-			end
-
 			if frame.frameFormat ~= 0 then continue end
+			renderFrames[frameI] = {}
+
 
 			local builtScanline
 			for rCY,slData in pairs(frame.scanlines) do
@@ -461,17 +459,15 @@ do
 					if builtChunk1+builtChunk2~=0 then
 						local chunksHere = lastChunks[rCY][rCX]
 						chunksHere[1],chunksHere[2] = bxor(builtChunk1,chunksHere[1]),bxor(builtChunk2,chunksHere[2])
-						accChunks[("%s-%s"):format(rCX,rCY)] = 
-						{{
+						insert(renderFrames[frameI],{
 							asRLIndex(rCX*2-1,rCY),
-							SetOffsetTable[chunksHere[1]%256][fdiv(chunksHere[1],256)]},
-						{
+							SetOffsetTable[chunksHere[1]%256][fdiv(chunksHere[1],256)]})
+						insert(renderFrames[frameI],{
 							asRLIndex(rCX*2,rCY),
-							SetOffsetTable[chunksHere[2]%256][fdiv(chunksHere[2],256)]}}
+							SetOffsetTable[chunksHere[2]%256][fdiv(chunksHere[2],256)]})
 					end
 				end
 			end
-
 			if frameI%10==0 then
 				task.wait()
 				updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
@@ -513,7 +509,6 @@ do
 		end
 		renderFuncs = SIDCN.BA.renderFuncs
 	end
-
 	local renderCoros = {}
 	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
 
@@ -524,12 +519,16 @@ do
 		coroutine.resume(c)
 	end
 	updateProgress("demoman")
+
 	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
 	do
-		for _,v in pairs(disk:Read('midiCoroutines') or {}) do coroutine.resume(v) end
+		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
 		disk:Write('midiCoroutines', nil)
 	end
 
 	task.wait(metadata.frameCount/metadata.fps+2)
+	for _,v in pairs(rendererLabels) do
+		v.Parent = nil
+	end
 	print("EOF")
 end
