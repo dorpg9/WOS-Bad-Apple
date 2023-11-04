@@ -150,7 +150,7 @@ getUncompressedData()
 bHead = b'''local function fileStringGet(...)local payloadString = string.gsub(\"'''
 bTail = b"\",'..',function (cc)return string.char(tonumber(cc, 16))end)return payloadString end"
 
-insertFile =[ "BadApple!-WOS.lua", "BadApple!-WOS-10fps.lua"]
+insertFile =[ "BadApple!-WOS.lua"]
 aSPath = "allString.lua"
 
 with open(aSPath,"wb") as aSFile,open(outputFilePath,'rb') as bacsFile:

@@ -146,8 +146,17 @@ do
 
 	renderLabel = {}
 
+	renderLabel.cGroups = setmetatable({},{__call=function(self,x,y)
+		local cgIndex = ("%i:%i"):format(x,y)
+		if not self[cgIndex] then self[cgIndex]=createScreenObject('CanvasGroup','mainScreen',{
+			Size=UDim2.fromScale(1,1),
+			BackgroundTransparency=1
+		})end
+		return self[cgIndex]
+	end})
+
 	function renderLabel.new(chunkX:number,chunkY:number)
-		return createScreenObject("ImageLabel", 'mainScreen', renderLabel.initPDict(chunkX,chunkY))
+		return createScreenObject("ImageLabel", renderLabel.cGroups(fdiv(chunkX,8),fdiv(chunkY,8)), renderLabel.initPDict(chunkX,chunkY))
 	end
 
 	function renderLabel.initPDict(cX,cY)
@@ -345,7 +354,7 @@ do
 			--renderers[rChunkX][rChunkY](nil,rChunkX,rChunkY)
 
 			--labelRow[chunkY] = renderLabel.new(chunkX,chunkY)
-			rendererLabels[("%s-%s"):format(chunkX,chunkY)]=renderLabel.new(chunkX,chunkY)
+			rendererLabels[("%s-%s"):format(chunkX,chunkY)] = renderLabel.new(chunkX,chunkY)
 		end
 		if chunkX%2==0 then task.wait() end
 	end
