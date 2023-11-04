@@ -148,7 +148,7 @@ do
 
 	renderLabel.cGroups = setmetatable({},{__call=function(self,x,y)
 		local cgIndex = ("%i:%i"):format(x,y)
-		if not self[cgIndex] then self[cgIndex]=createScreenObject('CanvasGroup','mainScreen',{
+		if not self[cgIndex] then self[cgIndex]=createScreenObject('CanvasGroup',rendererFrame,{
 			Size=UDim2.fromScale(1,1),
 			BackgroundTransparency=1
 		})end
