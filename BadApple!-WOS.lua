@@ -164,8 +164,8 @@ do
 
 	function renderLabel.initPDict(cX,cY)
 		return{
-			Position=UDim2.fromScale((cSize.x*(cX%cGroupDimX))/mSSize.x,(cSize.y*(cY%cGroupDimY))/mSSize.y),
-			Size=UDim2.fromScale(cSizeS.x,cSizeS.y),
+			Position=UDim2.fromScale((cX%cGroupDimX)/cGroupDimX,(cX%cGroupDimY)/cGroupDimY),
+			Size=UDim2.fromScale(1/cGroupDimX,1/cGroupDimY),
 			ResampleMode=1,
 			ScaleType=2,
 			TileSize=UDim2.new(1,0,1,0),
@@ -202,7 +202,7 @@ do
 	for x=0,255 do
 		SetOffsetTable[x]={}
 		for y=0,255 do
-			SetOffsetTable[x][y]={ImageRectOffset = Vector2.new(x*4,y*4),Rotation=1/tick()}
+			SetOffsetTable[x][y]={ImageRectOffset = Vector2.new(x*4,y*4)}
 		end
 	end
 end
