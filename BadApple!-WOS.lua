@@ -146,7 +146,7 @@ do
 
 	renderLabel = {}
 
-	local cGroupDimX,cGroupDimY = 4,4
+	local cGroupDimX,cGroupDimY = 8,8
 	renderLabel.cGroups = setmetatable({},{__call=function(self,x,y)
 		x,y = fdiv(x,cGroupDimX),fdiv(y,cGroupDimY)
 		local cgIndex = ("%i:%i"):format(x,y)
