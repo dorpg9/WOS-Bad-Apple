@@ -147,7 +147,7 @@ do
 	renderLabel = {}
 
 	renderLabel.cGroups = setmetatable({},{__call=function(self,x,y)
-		local cgIndex = ("%i:%i"):format(x,y)
+		local cgIndex = ("%i:%i"):format(fdiv(x,8),fdiv(y,8))
 		if not self[cgIndex] then self[cgIndex]=createScreenObject('CanvasGroup',rendererFrame,{
 			Size=UDim2.fromScale(1,1),
 			BackgroundTransparency=1
@@ -156,7 +156,7 @@ do
 	end})
 
 	function renderLabel.new(chunkX:number,chunkY:number)
-		return createScreenObject("ImageLabel", renderLabel.cGroups(fdiv(chunkX,8),fdiv(chunkY,8)), renderLabel.initPDict(chunkX,chunkY))
+		return createScreenObject("ImageLabel", renderLabel.cGroups(chunkX,chunkY), renderLabel.initPDict(chunkX,chunkY))
 	end
 
 	function renderLabel.initPDict(cX,cY)
@@ -199,7 +199,7 @@ do
 	for x=0,255 do
 		SetOffsetTable[x]={}
 		for y=0,255 do
-			SetOffsetTable[x][y]={ImageRectOffset = Vector2.new(x*4,y*4)}
+			SetOffsetTable[x][y]={ImageRectOffset = Vector2.new(x*4,y*4),Rotation=1/tick()}
 		end
 	end
 end
@@ -324,6 +324,10 @@ do
 	for screenName,screen in screens do
 		subScreen[screenName] = screen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
 	end
+	for i,auxScreen in auxScreens do
+		auxSubscreens[i] = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1})
+	end
+
 	SetPropertyTable = getmetatable(subScreen.mainScreen).ChangeProperties
 	Clone = getmetatable(subScreen.mainScreen).Clone
 
@@ -360,14 +364,15 @@ do
 	end
 	--pushFrame()
 
-	local perWidth = ceil(widthInChunks/(#auxScreens>0 and #auxScreens or 1))
-	for sI,auxScreen in pairs(auxScreens) do
-		local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
-		for cY=1,heightInChunks do
-			for cX=sI*perWidth+1,min((sI+1)*perWidth,widthInChunks) do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
+	do
+		local i,auxSubscreen = next(auxSubscreens,nil)
+		if auxSubscreen then
+			for _,cGroup in pairs(renderLabel.cGroups) do
+				auxSubscreen:AddChild(cGroup)
+				i,auxSubscreen = next(auxSubscreens,i)
+				task.wait()
+			end
 		end
-		task.wait()
-		auxSubscreens[sI]=aSubscreen
 	end
 
 	if not SIDCN.BA then
@@ -454,7 +459,6 @@ do
 		for frameI,frame in pairs(framesData) do
 			if frame.frameFormat ~= 0 then continue end
 			renderFrames[frameI] = {}
-
 
 			local builtScanline
 			for rCY,slData in pairs(frame.scanlines) do
