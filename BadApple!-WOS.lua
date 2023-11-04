@@ -146,11 +146,14 @@ do
 
 	renderLabel = {}
 
+	local cGroupDimX,cGroupDimY = 4,4
 	renderLabel.cGroups = setmetatable({},{__call=function(self,x,y)
-		local cgIndex = ("%i:%i"):format(fdiv(x,4),fdiv(y,4))
-		if not self[cgIndex] then self[cgIndex]=createScreenObject('CanvasGroup',rendererFrame,{
-			Size=UDim2.fromScale(1,1),
-			BackgroundTransparency=1
+		x,y = fdiv(x,cGroupDimX),fdiv(y,cGroupDimY)
+		local cgIndex = ("%i:%i"):format(x,y)
+		if not self[cgIndex] then self[cgIndex]=createScreenObject('CanvasGroup','mainScreen',{
+			Size=UDim2.fromScale(cSizeS.x*cGroupDimX,cSizeS.y*cGroupDimY),
+			Position=UDim2.fromScale((cSize.x*(x*cGroupDimX)+mWidth.x)/mSSize.x,(cSize.y*(y*cGroupDimY)+mWidth.y)/mSSize.y),
+			BackgroundTransparency=1,
 		})end
 		return self[cgIndex]
 	end})
@@ -161,7 +164,7 @@ do
 
 	function renderLabel.initPDict(cX,cY)
 		return{
-			Position=UDim2.fromScale((cSize.x*(cX)+mWidth.x)/mSSize.x,(cSize.y*(cY)+mWidth.y)/mSSize.y),
+			Position=UDim2.fromScale((cSize.x*(cX%cGroupDimX))/mSSize.x,(cSize.y*(cY%cGroupDimY))/mSSize.y),
 			Size=UDim2.fromScale(cSizeS.x,cSizeS.y),
 			ResampleMode=1,
 			ScaleType=2,
