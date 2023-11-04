@@ -164,7 +164,7 @@ do
 
 	function renderLabel.initPDict(cX,cY)
 		return{
-			Position=UDim2.fromScale((cX%cGroupDimX)/cGroupDimX,(cX%cGroupDimY)/cGroupDimY),
+			Position=UDim2.fromScale((cX%cGroupDimX)/cGroupDimX,(cY%cGroupDimY)/cGroupDimY),
 			Size=UDim2.fromScale(1/cGroupDimX,1/cGroupDimY),
 			ResampleMode=1,
 			ScaleType=2,
