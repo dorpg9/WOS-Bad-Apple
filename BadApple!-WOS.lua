@@ -361,10 +361,7 @@ do
 		auxSubscreens[sI]=aSubscreen
 	end
 
-	local renderFuncs
-	
 	if not SIDCN.BA then
-		renderFuncs = {}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
@@ -476,45 +473,41 @@ do
 		updateProgress("decode", 0.999)
 		local batchSize = 256
 		
-		for frameI,renderChunks in next,renderFrames do
-			for batchI = 1, ceil(#renderChunks/batchSize) do
-				local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
-				local renderChunksLength = #renderChunks
-	
-				insert(renderFuncs, function()
-					task.wait(frameI/metadata.fps)
-					for cI=sI,eI do
-						local renderChunk = renderChunks[cI]
-						SetPropertyTable(rendererLabels[renderChunk[1]],renderChunk[2])
-					end
-				end)
+		function SIDCN.BA.getRenderFuncs(IndexedLabels, progressFunc)
+			local renderFuncs = {}
+
+			for frameI,renderChunks in next,renderFrames do
+				for batchI = 1, ceil(#renderChunks/batchSize) do
+					local sI,eI = (batchI-1)*batchSize+1,min(batchSize*batchSize,#renderChunks)
+					local renderChunksLength = #renderChunks
+		
+					insert(renderFuncs,function()
+							task.wait(frameI/metadata.fps)
+							for cI=sI,eI do
+								local renderChunk = renderChunks[cI]
+								SetPropertyTable(IndexedLabels[renderChunk[1]],renderChunk[2])
+							end
+					end)
+				end
+				if frameI%50==0 then
+					task.wait()
+					if progressFunc then progressFunc("construct", frameI/metadata.frameCount, "Constructing Frames...") end
+				end
 			end
-			if frameI%50==0 then
-				task.wait()
-				updateProgress("construct", frameI/metadata.frameCount, "Constructing Frames...")
-			end
+
+			return renderFuncs,metadata.frameCount/metadata.fps
 		end
-		SIDCN.BA = {renderFuncs=renderFuncs,rendererLabels=rendererLabels}
-	else
-		local perWidth = ceil(widthInChunks/(#auxScreens>0 and #auxScreens or 1))
-		rendererLabels = SIDCN.BA.rendererLabels
-		for sI,auxScreen in pairs(auxScreens) do
-			auxScreen:ClearElements()
-			local aSubscreen = auxScreen:CreateElement("Frame", {Name="subScreen", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Transparency=1})
-			for cY=1,heightInChunks do
-				for cX=sI*perWidth+1,min((sI+1)*perWidth,widthInChunks) do aSubscreen:AddChild(rendererLabels[("%s-%s"):format(cX,cY)])end
-			end
-			task.wait()
-			auxSubscreens[sI]=aSubscreen
-		end
-		renderFuncs = SIDCN.BA.renderFuncs
 	end
+	
 	local renderCoros = {}
-	for _,f in renderFuncs do insert(renderCoros,coroutine.create(f))end
+	local loadedRenderFuncs,duration = SIDCN.BA.getRenderFuncs(rendererLabels,updateProgress)
+
+	for _,f in loadedRenderFuncs do insert(renderCoros,coroutine.create(f))end
 
 	updateProgress("read", 0.999)
 	updateProgress("decode", 0.999)
 	updateProgress("construct", 0.999, "Finishing up...")
+
 	for _,c in pairs(renderCoros) do
 		coroutine.resume(c)
 	end
@@ -526,7 +519,7 @@ do
 		disk:Write('midiCoroutines', nil)
 	end
 
-	task.wait(metadata.frameCount/metadata.fps+2)
+	task.wait(duration+2)
 	for _,v in pairs(rendererLabels) do
 		v.Parent = nil
 		task.wait()
