@@ -371,6 +371,7 @@ do
 	end
 
 	if not SIDCN.BA then
+		SIDCN.BA={}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
 
