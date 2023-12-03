@@ -166,7 +166,7 @@ bTail = br'''"
     i=i+increment
 
     local progress = i/payloadLength
-    print(f('Hex Decoding: %4.1f%% [%-*s]',progress*100,barLength,rep('#',floor(progress*barLength))))
+    print(frmt('Hex Decoding: %4.1f%% [%-*s]',progress*100,barLength,rep('#',flr(progress*barLength))))
     task.wait()
   end
   
