@@ -151,26 +151,32 @@ bHead = br'''local function fileStringGet(payloadString)
   payloadString = payloadString or "'''
 bTail = br'''"
 
-  local payloadLength = #payloadString
-  local char,gsub,sub,ton,rep,frmt,flr = string.char,string.gsub,string.sub,tonumber,string.rep,string.format,math.floor
+	local increment = 16384
+	local barLength = 32
 
-  local GSF = function (cc)return char(ton(cc, 16))end
-  local decodedTable,decodedTableIndex = {},0
-  local increment = 16384
-  local barLength = 32
+	local payloadLength = #payloadString
+	local char,gsub,sub,ton,rep,fmt,flr = string.char,string.gsub,string.sub,tonumber,string.rep,string.format,math.floor
+	local GSF = function (cc)return char(ton(cc, 16))end
+	local decodedTable,decodedTableIndex = {},0
+	
+	local printFormat = fmt('Hex Decoding: %%5.1f%%%% [%%-%is]',barLength)
+	local printProgress = function(i)
+		local progress = i/payloadLength
+		print(fmt(printFormat,progress*100,rep('#',flr(progress*barLength))))
+	end
 
-  local i = 1
-  while i<=payloadLength do
-    decodedTableIndex = decodedTableIndex + 1
-    decodedTable[decodedTableIndex] = gsub(sub(payloadString,i,i+increment),'..',GSF)
-    i=i+increment
+	local i = 1
+	while i<=payloadLength do
+		decodedTableIndex = decodedTableIndex + 1
+		decodedTable[decodedTableIndex] = gsub(sub(payloadString,i,i+increment),'..',GSF)
+		
+		printProgress(i)
+		i=i+increment
+		task.wait()
+	end
+	printProgress(payloadLength)
 
-    local progress = i/payloadLength
-    print(frmt('Hex Decoding: %4.1f%% [%-*s]',progress*100,barLength,rep('#',flr(progress*barLength))))
-    task.wait()
-  end
-  
-  return table.concat(decodedTable)
+	return table.concat(decodedTable)
 end'''
 
 insertFile =[ "BadApple!-WOS.lua"]
