@@ -168,7 +168,7 @@ bTail = br'''"
 	local i = 1
 	while i<=payloadLength do
 		decodedTableIndex = decodedTableIndex + 1
-		decodedTable[decodedTableIndex] = gsub(sub(payloadString,i,i+increment),'..',GSF)
+		decodedTable[decodedTableIndex] = gsub(sub(payloadString,i,i+increment-1),'..',GSF)
 		
 		printProgress(i)
 		i=i+increment
