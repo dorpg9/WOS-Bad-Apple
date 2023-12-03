@@ -483,7 +483,8 @@ do
 				end
 			end
 			if frameI%10==0 then
-				task.wait()
+				local sTime = tick()
+				repeat if true then end until tick()-sTime>0.01
 				updateProgress("decode", frameI/metadata.frameCount, "Decoding file...")
 			end
 		end
