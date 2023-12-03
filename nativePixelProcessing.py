@@ -147,8 +147,31 @@ def bacfCompress(bacfPath:str, bacrPath:str):
 
 getUncompressedData()
 
-bHead = b'''local function fileStringGet(...)local payloadString = string.gsub(\"'''
-bTail = b"\",'..',function (cc)return string.char(tonumber(cc, 16))end)return payloadString end"
+bHead = br'''local function fileStringGet(payloadString)
+  payloadString = payloadString or "'''
+bTail = br'''"
+
+  local payloadLength = #payloadString
+  local char,gsub,sub,ton,rep,frmt,flr = string.char,string.gsub,string.sub,tonumber,string.rep,string.format,math.floor
+
+  local GSF = function (cc)return char(ton(cc, 16))end
+  local decodedTable,decodedTableIndex = {},0
+  local increment = 16384
+  local barLength = 32
+
+  local i = 1
+  while i<=payloadLength do
+    decodedTableIndex = decodedTableIndex + 1
+    decodedTable[decodedTableIndex] = gsub(sub(payloadString,i,i+increment),'..',GSF)
+    i=i+increment
+
+    local progress = i/payloadLength
+    print(f('Hex Decoding: %4.1f%% [%-*s]',progress*100,barLength,rep('#',floor(progress*barLength))))
+    task.wait()
+  end
+  
+  return table.concat(decodedTable)
+end'''
 
 insertFile =[ "BadApple!-WOS.lua"]
 aSPath = "allString.lua"
@@ -171,7 +194,7 @@ if insertFile:
     toInsert = open(aSPath,"r").read()
     contents = open(fName, 'r+').readlines()
 
-    contents[3] = toInsert + "\n"
+    contents[3] = toInsert.replace('\n',' ') + "\n"
     open('Packed-'+fName,'w').writelines(contents)
     dataPath = "Packed-"+fName
 
