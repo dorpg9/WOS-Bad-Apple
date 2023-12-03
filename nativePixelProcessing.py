@@ -151,13 +151,13 @@ bHead = br'''local function fileStringGet(payloadString)
   payloadString = payloadString or "'''
 bTail = br'''"
 
-	local increment = 16384
+	local increment = 65536
 	local barLength = 32
 
 	local payloadLength = #payloadString
 	local char,gsub,sub,ton,rep,fmt,flr = string.char,string.gsub,string.sub,tonumber,string.rep,string.format,math.floor
 	local GSF = function (cc)return char(ton(cc, 16))end
-	local decodedTable,decodedTableIndex = {},0
+	local decodedTable = {}
 	
 	local printFormat = fmt('Hex Decoding: %%5.1f%%%% [%%-%is]',barLength)
 	local printProgress = function(i)
@@ -167,8 +167,7 @@ bTail = br'''"
 
 	local i = 1
 	while i<=payloadLength do
-		decodedTableIndex = decodedTableIndex + 1
-		decodedTable[decodedTableIndex] = gsub(sub(payloadString,i,i+increment-1),'..',GSF)
+		decodedTable[#decodedTable+1] = gsub(sub(payloadString,i,i+increment-1),'..',GSF)
 		
 		printProgress(i)
 		i=i+increment
