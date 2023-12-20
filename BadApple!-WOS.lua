@@ -210,7 +210,7 @@ local function InitGUI()
 	print("Initializing GUI")
 
 	decor = {}
-	local mScreenDimV2 = screens["mainScreen"]:GetDimensions()
+	local mScreenDimV2 = subScreen.mainScreen.AbsoluteSize
 	mSSize.x,mSSize.y=mScreenDimV2.X,mScreenDimV2.Y;mSSize.r=mSSize.x/mSSize.y
 
 	if mSSize.r>aRatio then
