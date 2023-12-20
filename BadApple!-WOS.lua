@@ -316,7 +316,7 @@ do
 	if (GetPartFromPort(1,'Disk')or{Read=function()end}):Read('PuterLibrary') then
 		puterROM = GetPartFromPort(1,'Disk')
 		puterLib = puterROM:Read('PuterLibrary')
-		puterWindow = puterLib.CreateWindow(0,0,'Bad Apple!!',Color3.new(0,0,0))
+		puterWindow = puterLib.CreateWindow(480,360,'Bad Apple!!',Color3.new(0,0,0))
 
 		auxScreens={puterWindow}
 	else
