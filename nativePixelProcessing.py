@@ -203,7 +203,7 @@ if insertFile:
     open('Packed-'+fName,'w').writelines(contents)
     dataPath = "Packed-"+fName
 
-    if input(f'Upload Packed-{fName} to DPaste?').upper() == 'Y':
+    if False and input(f'Upload Packed-{fName} to DPaste?').upper() == 'Y':
       from requests import post
 
       response = post('https://dpaste.org/api/',data={'format':b'url'},files={'content':open('Packed-'+fName,'rb')},timeout=30)
