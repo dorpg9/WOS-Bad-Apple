@@ -34,8 +34,7 @@ local updateProgress, progressFrame, rendererFrame, decor, disk, pushFrame
 local metadata = {["width"]=480,["height"]=360,["frameCount"]=6573,["fps"]=30}
 local aRatio, widthInChunks, heightInChunks, widthInRChunks, heightInRChunks = 4/3,120,90,60,90
 local mSSize, rFSize, rCSize, cSize, cSizeS, mWidth = {},{},{},{},{},{}
-
-
+local puterROM,puterLib,puterWindow=false,false,nil
 
 -- Large to Humongous Classes and Libraries, includes 3rd Party Software
 local WOSscreenEmulator,LibDeflate,SignalConnection,Signal,bit32
@@ -313,9 +312,23 @@ do
 	screens = {}
 
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
-	auxScreens = GetPartsFromPort(1, "Screen")
+
+	if (GetPartFromPort(1,'Disk')or{Read=function()end}):Read('PuterLibrary') then
+		puterROM = GetPartFromPort(1,'Disk')
+		puterLib = puterROM:Read('PuterLibrary')
+		puterWindow = puterLib.CreateWindow(0,0,'Bad Apple!!',Color3.new(0,0,0))
+
+		auxScreens={puterWindow}
+	else
+		local i = 1 
+		repeat
+			auxScreens = GetPartsFromPort(1, "Screen")i=i+1
+		until auxScreens and auxScreens[1] or i>=65535 
+		if not (auxScreens and auxScreens[1]) then return end 
+	end
+
 	screens["mainScreen"] = table.remove(auxScreens)
-	screens["buildScreen"] = GetPartFromPort(2, "Screen") or screens["mainScreen"]
+	screens["buildScreen"] = screens.mainScreen
 	disk=GetPartFromPort(35,"Disk")
 
 	assert(screens.mainScreen)
@@ -531,8 +544,8 @@ do
 	end
 	updateProgress("demoman")
 
-	for _,v in next,GetPartsFromPort(22,"Speaker") do v:ClearSounds() end
-	do
+	for _,v in pairs(GetPartsFromPort(22,"Speaker")or{}) do v:ClearSounds() end
+	if disk then
 		for _,v in pairs(disk:Read('midiCoroutines')) do coroutine.resume(v) end
 		disk:Write('midiCoroutines', nil)
 	end
@@ -542,5 +555,6 @@ do
 		v.Parent = nil
 		task.wait()
 	end
+	if puterWindow then puterWindow:Close() end
 	print("EOF")
 end

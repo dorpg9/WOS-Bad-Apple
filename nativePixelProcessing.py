@@ -203,5 +203,13 @@ if insertFile:
     open('Packed-'+fName,'w').writelines(contents)
     dataPath = "Packed-"+fName
 
+    if input(f'Upload Packed-{fName} to DPaste?').upper() == 'Y':
+      from requests import post
+
+      response = post('https://dpaste.org/api/',data={'format':b'url'},files={'content':open('Packed-'+fName,'rb')},timeout=30)
+      print(response.content.decode()+'/raw')
+      print(repr(response))
+input('Press any key to continue...')
+
 # shutil.copyfile(os.path.realpath(outputFilePath),os.path.abspath(allStringClonePath))
 # response = requests.post('https://0x0.st', files={"file":open('allString.lua', 'rb')})
