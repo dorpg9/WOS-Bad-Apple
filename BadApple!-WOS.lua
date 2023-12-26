@@ -37,7 +37,7 @@ local mSSize, rFSize, rCSize, cSize, cSizeS, mWidth = {},{},{},{},{},{}
 local puterROM,puterLib,puterWindow=false,false,nil
 
 -- Large to Humongous Classes and Libraries, includes 3rd Party Software
-local WOSscreenEmulator,LibDeflate,SignalConnection,Signal,bit32
+local LibDeflate,bit32
 do
 	-- davidm/lua-bit-numberlua, GitHub
 	do local a=2^32;local b=a-1;bit32={}local function d(e)local f={}local g=setmetatable({},f)function f:__index(h)local i=e(h)g[h]=i;return i end;return g end;local function j(g,k)local function l(m,n)local o,p=0,1;while m~=0 and n~=0 do local q,r=m%k,n%k;o=o+g[q][r]*p;m=(m-q)/k;n=(n-r)/k;p=p*k end;o=o+(m+n)*p;return o end;return l end;
@@ -88,28 +88,9 @@ do
 
 
 	-- Weldify's Signal Class
-	do SignalConnection,Signal={},{};SignalConnection.__index,Signal.__index=SignalConnection,Signal;SignalConnection.ClassName,Signal.ClassName="SignalConnection","Signal"
-		function SignalConnection.new(b,c,d)return setmetatable({_container=b,_index=c,_handler=d},SignalConnection)end;
-		function SignalConnection:Disconnect()if self._container then self._container[self._index]=nil end end;
-		function Signal.new()return setmetatable({_waits={},_handlers={}},Signal)end;
-		function Signal:Fire(...)for f,g in ipairs(self._waits)do coroutine.resume(g,...)table.remove(self._waits,f)end;for f,g in pairs(self._handlers)do local h=coroutine.create(g._handler)coroutine.resume(h,...)end end;
-		function Signal:Connect(d)assert(type(d)=="function","Passed value is not a function")local c=#self._handlers+1;local i=SignalConnection.new(self._handlers,c,d)table.insert(self._handlers,c,i)return i end;
-		function Signal:Wait()table.insert(self._waits,coroutine.running())return coroutine.yield()end;
-		function Signal:Destroy()for f,g in ipairs(self._waits)do coroutine.resume(g)table.remove(self._waits,f)end;for f,i in pairs(self._handlers)do i:Disconnect()end end end
 
 
 	-- dumb thing I wrote myself
-	do WOSscreenEmulator = {}
-		WOSscreenEmulator.screenObjectClass={GUIObject=nil}
-		WOSscreenEmulator.screenClass={SurfaceGUI=nil}
-		function WOSscreenEmulator.screenObjectClass:new(b)b=b or {}setmetatable(b,self)self.__index=self;return b end
-		function WOSscreenEmulator.screenObjectClass:AddChild(c)c.GUIObject.Parent=self.GUIObject;return end;
-		function WOSscreenEmulator.screenObjectClass:Destroy()self.GUIObject:Destroy()return end;
-		function WOSscreenEmulator.screenObjectClass:ChangeProperties(d)for e,f in d do self.GUIObject[e]=f end;return end;
-
-		function WOSscreenEmulator.screenClass:new(b)b=b or{}setmetatable(b,self)self.__index=self;return b end;
-		function WOSscreenEmulator.screenClass:CreateElement(g,d)local h=Instance.new(g)for e,f in d do h[e]=f end;h.Parent=self.SurfaceGUI;if#self.SurfaceGUI:GetDescendants()>1000 then print("!LIMIT REACHED!")return end;return WOSscreenEmulator.screenObjectClass:new({GUIObject=h})end;
-		function WOSscreenEmulator.screenClass:GetDimensions()return self.SurfaceGUI.AbsoluteSize end end
 end
 -- Other Libraries, Classes and Functions
 local sUnpackIter, createScreenObject, renderLabel, UndoFilter, b64Decode, dump,SetProperty,SetPropertyTable,Clone
@@ -130,7 +111,8 @@ do
 		local obj = Clone(baseTypes[className])
 
 		assert(obj,"cSO encountered an error:\nnil.")
-		if type(parent)=="table" and parent.AddChild then parent:AddChild(obj)end;obj:ChangeProperties(properties) 
+		obj:ChangeProperties(properties) 
+		if type(parent)=="table" and parent.AddChild then parent:AddChild(obj)end;
 		return obj
 	end
 
@@ -309,6 +291,14 @@ local function InitGUI()
 end
 
 do
+	local file = fileStringGet()
+	metadata = {
+		["width"] = sUnpack(">I2",file,1),
+		["height"] = sUnpack(">I2",file,3),
+		["frameCount"] = sUnpack(">I3",file,5),
+		["fps"] = sUnpack(">I1",file,8),
+	}
+	file=nil
 	screens = {}
 
 	if not GetPartFromPort then GetPartFromPort,GetPartsFromPort,Beep,TriggerPort = nil,nil,nil,nil end
@@ -370,15 +360,11 @@ do
 		print("Building Screen Object: "..tostring(chunkX)*heightInRChunks)
 		for chunkY=1,heightInChunks do
 
-			--renderers[rChunkX][rChunkY] = coroutine.wrap(InitRendererChunkA)
-			--renderers[rChunkX][rChunkY](nil,rChunkX,rChunkY)
 
-			--labelRow[chunkY] = renderLabel.new(chunkX,chunkY)
 			rendererLabels[("%s-%s"):format(chunkX,chunkY)] = renderLabel.new(chunkX,chunkY)
 		end
 		if chunkX%2==0 then task.wait() end
 	end
-	--pushFrame()
 
 	do
 		local i,auxSubscreen = next(auxSubscreens,nil)
@@ -392,16 +378,11 @@ do
 	end
 
 	if not SIDCN.BA then
-		SIDCN.BA={}
+		local BA={}
 		assert(fileStringGet, "Please insert cash or payment type.")
 		local file = fileStringGet()
-
-		metadata = {
-			["width"] = sUnpack(">I2",file,1),
-			["height"] = sUnpack(">I2",file,3),
-			["frameCount"] = sUnpack(">I3",file,5),
-			["fps"] = sUnpack(">I1",file,8),
-		}
+		
+		BA.metadata = metadata
 
 		local framesData = {}
 
@@ -504,7 +485,7 @@ do
 		updateProgress("decode", 0.999)
 		local batchSize = 256
 		
-		function SIDCN.BA.getRenderFuncs(IndexedLabels, progressFunc)
+		function BA.getRenderFuncs(IndexedLabels, progressFunc)
 			local renderFuncs = {}
 
 			for frameI,renderChunks in next,renderFrames do
@@ -528,6 +509,7 @@ do
 
 			return renderFuncs,metadata.frameCount/metadata.fps
 		end
+		SIDCN.BA = BA
 	end
 	
 	local renderCoros = {}
