@@ -41,28 +41,24 @@ def compare_chunkDiffFlatArray(l_chunkArray: np.ndarray, r_chunkArray: np.ndarra
 
 def getMetadata(vidcap: cv2.VideoCapture) -> bytes:
 	return (b'BAC\x01'
-		+ TARGET_WIDTH.to_bytes(2, 'little')
-		+ TARGET_HEIGHT.to_bytes(2, 'little')
+		+ (TARGET_WIDTH//4).to_bytes(2, 'little')
+		+ (TARGET_HEIGHT//4).to_bytes(2, 'little')
 		+ TARGET_FPS.to_bytes(2, 'little')
 		+ math.floor(vidcap.get(cv2.CAP_PROP_FRAME_COUNT) / vidcap.get(cv2.CAP_PROP_FPS) * TARGET_FPS).to_bytes(4, 'little')
 		+ b'\0\0')
 
 # [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][padding: 2 bytes][data: n bytes]
-# compression 02: interleaved
 
 def makeFileChunk(cType: bytes, data: bytes)-> bytes:
-	compressed = data
 	compression = b'\0'
 
-	"""
+	width = 2
 	if cType == CHUNK_TYPES['P-FRAME']:
-		compressed = interleave_bytes(data, 4)
-		compression = b'\2'
-	else:
-		compressed = data
-	#"""
+		width = 4
 
-	return cType + compression + len(compressed).to_bytes(4, 'little') + b'\0\0' + compressed
+	interleaved = interleave_bytes(data, width)
+
+	return cType + compression + len(interleaved).to_bytes(4, 'little') + b'\0\0' + interleaved
 
 
 
