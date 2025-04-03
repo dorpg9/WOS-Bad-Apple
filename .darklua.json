@@ -1,0 +1,25 @@
+{
+  "bundle": {
+    "excludes": [
+      "ar_input",
+      "ethernet",
+      "fs",
+      "nature2d",
+      "nature2d_legacy",
+      "octotree",
+      "partdata",
+      "players",
+      "promise",
+      "repr",
+      "sift",
+      "signal",
+      "symbol",
+      "tableUtil",
+      "trove",
+      "tween"
+    ],
+    "require_mode": {
+      "name": "path"
+    }
+  }
+}
