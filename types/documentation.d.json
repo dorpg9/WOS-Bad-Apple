@@ -1114,18 +1114,23 @@
     "documentation": "Determines if the created model should be locked by the owner of the Constructor."
   },
   "@roblox/globaltype/Constructor.CalculateModelRecipe": {
+    "documentation": "Returns the resource(s) required to craft the provided model.",
     "params": [
       {
         "documentation": "@roblox/globaltype/Constructor",
         "name": "self"
       },
       {
-        "name": "..."
+        "documentation": "@roblox/globaltype/Constructor.CalculateModelRecipe/params/1",
+        "name": "modelCode"
       }
     ],
     "returns": [
       "@roblox/globaltype/Constructor.CalculateModelRecipe/returns/0"
     ]
+  },
+  "@roblox/globaltype/Constructor.CalculateModelRecipe/params/1": {
+    "documentation": "The model data of the model. Defaults to the constructor's `ModelCode` if not provided."
   },
   "@roblox/globaltype/Constructor.CalculateModelRecipe/returns/0": {},
   "@roblox/globaltype/Constructor.Configured": {

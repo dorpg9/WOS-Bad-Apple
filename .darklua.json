@@ -2,6 +2,7 @@
   "bundle": {
     "excludes": [
       "ar_input",
+      "coordinate",
       "ethernet",
       "fs",
       "nature2d",

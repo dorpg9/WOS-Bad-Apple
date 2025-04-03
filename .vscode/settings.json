@@ -1,29 +1,16 @@
 {
-  "luau-lsp.completion.imports.suggestServices": false,
-  "luau-lsp.platform.type": "roblox",
-  "luau-lsp.require.fileAliases": {
-    "ar_input": "./types/modules/ar_input.luau",
-    "ethernet": "./types/modules/ethernet.luau",
-    "fs": "./types/modules/fs.luau",
-    "nature2d": "./types/modules/nature2d.luau",
-    "nature2d_legacy": "./types/modules/nature2d_legacy.luau",
-    "octotree": "./types/modules/octotree.luau",
-    "partdata": "./types/modules/partdata.luau",
-    "players": "./types/modules/players.luau",
-    "promise": "./types/modules/promise.luau",
-    "repr": "./types/modules/repr.luau",
-    "sift": "./types/modules/sift",
-    "signal": "./types/modules/signal.luau",
-    "symbol": "./types/modules/symbol.luau",
-    "tableUtil": "./types/modules/tableUtil.luau",
-    "trove": "./types/modules/trove.luau",
-    "tween": "./types/modules/tween.luau"
-  },
-  "luau-lsp.sourcemap.enabled": false,
-  "luau-lsp.types.definitionFiles": [
-    "./types/global.d.luau"
-  ],
-  "luau-lsp.types.documentationFiles": [
-    "./types/documentation.d.json"
-  ]
+	"luau-lsp.platform.type": "roblox",
+	"luau-lsp.sourcemap.enabled": false,
+	
+	"luau-lsp.require.mode": "relativeToFile",
+	"luau-lsp.require.directoryAliases": {
+		"@lune/": "~/.lune/.typedefs/0.8.2/"
+	},
+
+	"[luau]": {
+		"editor.defaultFormatter": "JohnnyMorganz.stylua"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
 }

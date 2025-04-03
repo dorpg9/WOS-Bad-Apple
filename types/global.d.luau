@@ -48,7 +48,7 @@ export type OrbitRegionInfo = { OrbitBody: BlackHoleRegionInfo | StarRegionInfo 
 export type FileSystem = { split: (pathname: string) -> { string }, copy: (self: FileSystem, pathnameFrom: string, pathnameTo: string?) -> (), filename: (pathname: string) -> string, pwd: (self: FileSystem) -> string, readdir: (self: FileSystem, pathname: string) -> { string }, chdir: (self: FileSystem, pathname: string) -> string, new: (source: (FileSystemRoot | FileSystemDirectory)?) -> FileSystem, writefile: (self: FileSystem, filepath: string, contents: string) -> (), unlink: (self: FileSystem, pathname: string) -> (), separator: string, parentdir: (pathname: string) -> string, moveMerge: (self: FileSystem, pathnameFrom: string, pathnameTo: string?) -> (), readfile: (self: FileSystem, filepath: string) -> string, exists: (pathname: string) -> boolean, join: (...string) -> string, mklink: (self: FileSystem, linkName: string, targetName: string?) -> (), resolve: (pathname: string) -> string, rename: (self: FileSystem, pathnameFrom: string, pathnameTo: string?) -> (), mkdir: (self: FileSystem, pathname: string?) -> () }
 export type FileSystemRoot = { pwd: string, kind: "root", attributes: FileAttributes?, root: FileSystemDirectory }
 export type ModemRequest = { Method: ("GET" | "POST" | "PUSH" | "PATCH" | "DELETE")?, Compress: Enum.HttpCompression?, Url: string, Headers: { [string]: any }?, Body: string? }
-export type CoordinateMetatable = { type: "Coordinate", __eq: (Coordinate) -> Coordinate, GetSeed: (self: Coordinate, arg2: any) -> number, __tostring: (Coordinate) -> string, __add: (Coordinate) -> Coordinate, ToArray: (self: Coordinate, arg2: any) -> {number | boolean}, Clone: (self: Coordinate) -> (), GetRandom: (self: Coordinate, arg2: any) -> Random, __mul: (Coordinate) -> Coordinate, CoordStringWithoutPlanet: (self: Coordinate, arg1: any) -> string, __index: CoordinateMetatable, __div: (Coordinate) -> Coordinate }
+export type CoordinateMetatable = { type: "Coordinate", __eq: (Coordinate) -> Coordinate, GetSeed: (self: Coordinate) -> number, __tostring: (Coordinate) -> string, __add: (Coordinate) -> Coordinate, ToArray: (self: Coordinate) -> { number | boolean }, Clone: (self: Coordinate) -> (), GetRandom: (self: Coordinate) -> Random, __mul: (Coordinate) -> Coordinate, CoordStringWithoutPlanet: (self: Coordinate) -> string, __index: CoordinateMetatable, __div: (Coordinate) -> Coordinate }
 export type FileAttributes = { permissions: ({ userPermissions: { [number]: FilePermissions }?, owner: "system" | number } & FilePermissions)?, metadata: { [primitive]: primitive }? }
 export type StarType = "Red" | "Orange" | "Yellow" | "Blue" | "Neutron"
 export type Permission = "Modify" | "Unlock" | "Paint" | "Configure" | "Interact" | "Attach"
@@ -63,12 +63,11 @@ export type VectorForceProperties = { ApplyAtCenterOfMass: boolean?, Force: Vect
 export type HandlesProperties = { Faces: Faces?, Style: Enum.HandlesStyle? } & PartAdornmentProperties
 export type UIScaleProperties = { Scale: number? } & InstanceProperties
 export type CFrameValueProperties = { Value: CFrame? } & InstanceProperties
-export type ImageLabelProperties = { Image: string?, ImageColor3: Color3?, ImageRectOffset: Vector2?, ImageRectSize: Vector2?, ImageTransparency: number?, ResampleMode: Enum.ResamplerMode?, ScaleType: Enum.ScaleType?, SliceCenter: Rect?, SliceScale: number?, TileSize: UDim2? } & GuiObjectProperties
+export type ImageLabelProperties = { Image: string?, ImageColor3: Color3?, ImageContent: string?, ImageRectOffset: Vector2?, ImageRectSize: Vector2?, ImageTransparency: number?, ResampleMode: Enum.ResamplerMode?, ScaleType: Enum.ScaleType?, SliceCenter: Rect?, SliceScale: number?, TileSize: UDim2? } & GuiObjectProperties
 export type UIListLayoutProperties = { HorizontalFlex: Enum.UIFlexAlignment?, ItemLineAlignment: Enum.ItemLineAlignment?, Padding: UDim?, VerticalFlex: Enum.UIFlexAlignment?, Wraps: boolean? } & UIGridStyleLayoutProperties
 export type AudioReverbProperties = { Bypass: boolean?, DecayRatio: number?, DecayTime: number?, Density: number?, Diffusion: number?, DryLevel: number?, EarlyDelayTime: number?, HighCutFrequency: number?, LateDelayTime: number?, LowShelfFrequency: number?, LowShelfGain: number?, ReferenceFrequency: number?, WetLevel: number? } & InstanceProperties
 export type InputActionProperties = { Enabled: boolean?, Type: Enum.InputActionType? } & InstanceProperties
 export type BillboardGuiProperties = { Active: boolean?, Adornee: Instance?, AlwaysOnTop: boolean?, Brightness: number?, ClipsDescendants: boolean?, DistanceLowerLimit: number?, DistanceStep: number?, DistanceUpperLimit: number?, ExtentsOffset: Vector3?, ExtentsOffsetWorldSpace: Vector3?, LightInfluence: number?, MaxDistance: number?, PlayerToHideFrom: Instance?, Size: UDim2?, SizeOffset: Vector2?, StudsOffset: Vector3?, StudsOffsetWorldSpace: Vector3? } & LayerCollectorProperties
-export type AudioListenerProperties = { AudioInteractionGroup: string?, SimulationFidelity: Enum.AudioSimulationFidelity? } & InstanceProperties
 export type TeamProperties = { AutoAssignable: boolean?, TeamColor: BrickColor? } & InstanceProperties
 export type FlangeSoundEffectProperties = { Depth: number?, Mix: number?, Rate: number? } & SoundEffectProperties
 export type ControllerManagerProperties = { ActiveController: ControllerBase?, BaseMoveSpeed: number?, BaseTurnSpeed: number?, ClimbSensor: ControllerSensor?, FacingDirection: Vector3?, GroundSensor: ControllerSensor?, MovingDirection: Vector3?, RootPart: BasePart?, UpDirection: Vector3? } & InstanceProperties
@@ -88,13 +87,12 @@ export type SelectionBoxProperties = { LineThickness: number?, SurfaceColor3: Co
 export type MotorProperties = { CurrentAngle: number?, DesiredAngle: number?, MaxVelocity: number? } & JointInstanceProperties
 export type TremoloSoundEffectProperties = { Depth: number?, Duty: number?, Frequency: number? } & SoundEffectProperties
 export type PoseProperties = { CFrame: CFrame? } & PoseBaseProperties
-export type HingeConstraintProperties = { ActuatorType: Enum.ActuatorType?, AngularResponsiveness: number?, AngularSpeed: number?, AngularVelocity: number?, LimitsEnabled: boolean?, LowerAngle: number?, MotorMaxAcceleration: number?, MotorMaxTorque: number?, Radius: number?, Restitution: number?, ServoMaxTorque: number?, TargetAngle: number?, UpperAngle: number? } & ConstraintProperties
 export type PathfindingLinkProperties = { Attachment0: Attachment?, Attachment1: Attachment?, IsBidirectional: boolean?, Label: string? } & InstanceProperties
 export type CylinderHandleAdornmentProperties = { Angle: number?, Height: number?, InnerRadius: number?, Radius: number? } & HandleAdornmentProperties
 export type EulerRotationCurveProperties = { RotationOrder: Enum.RotationOrder? } & InstanceProperties
 export type AttachmentProperties = { Axis: Vector3?, CFrame: CFrame?, SecondaryAxis: Vector3?, Visible: boolean?, WorldAxis: Vector3?, WorldCFrame: CFrame?, WorldSecondaryAxis: Vector3? } & InstanceProperties
 export type AudioChannelMixerProperties = { Layout: Enum.AudioChannelLayout? } & InstanceProperties
-export type ImageButtonProperties = { HoverImage: string?, Image: string?, ImageColor3: Color3?, ImageRectOffset: Vector2?, ImageRectSize: Vector2?, ImageTransparency: number?, PressedImage: string?, ResampleMode: Enum.ResamplerMode?, ScaleType: Enum.ScaleType?, SliceCenter: Rect?, SliceScale: number?, TileSize: UDim2? } & GuiButtonProperties
+export type ImageButtonProperties = { HoverImage: string?, Image: string?, ImageColor3: Color3?, ImageContent: string?, ImageRectOffset: Vector2?, ImageRectSize: Vector2?, ImageTransparency: number?, PressedImage: string?, ResampleMode: Enum.ResamplerMode?, ScaleType: Enum.ScaleType?, SliceCenter: Rect?, SliceScale: number?, TileSize: UDim2? } & GuiButtonProperties
 export type CylindricalConstraintProperties = { AngularActuatorType: Enum.ActuatorType?, AngularLimitsEnabled: boolean?, AngularResponsiveness: number?, AngularRestitution: number?, AngularSpeed: number?, AngularVelocity: number?, InclinationAngle: number?, LowerAngle: number?, MotorMaxAngularAcceleration: number?, MotorMaxTorque: number?, RotationAxisVisible: boolean?, ServoMaxTorque: number?, TargetAngle: number?, UpperAngle: number? } & SlidingBallConstraintProperties
 export type WireframeHandleAdornmentProperties = { Scale: Vector3? } & HandleAdornmentProperties
 export type AccessoryProperties = { AccessoryType: Enum.AccessoryType? } & AccoutrementProperties
@@ -102,6 +100,7 @@ export type SurfaceSelectionProperties = { TargetSurface: Enum.NormalId? } & Par
 export type ArcHandlesProperties = { Axes: Axes? } & PartAdornmentProperties
 export type TextButtonProperties = { FontFace: Font?, LineHeight: number?, MaxVisibleGraphemes: number?, OpenTypeFeatures: string?, RichText: boolean?, Text: string?, TextColor3: Color3?, TextDirection: Enum.TextDirection?, TextScaled: boolean?, TextSize: number?, TextStrokeColor3: Color3?, TextStrokeTransparency: number?, TextTransparency: number?, TextTruncate: Enum.TextTruncate?, TextWrapped: boolean?, TextXAlignment: Enum.TextXAlignment?, TextYAlignment: Enum.TextYAlignment? } & GuiButtonProperties
 export type ViewportFrameProperties = { Ambient: Color3?, CurrentCamera: Camera?, ImageColor3: Color3?, ImageTransparency: number?, LightColor: Color3?, LightDirection: Vector3? } & GuiObjectProperties
+export type AudioTextToSpeechProperties = { Looping: boolean?, Pitch: number?, PlaybackSpeed: number?, Speed: number?, Text: string?, TimePosition: number?, VoiceId: string?, Volume: number? } & InstanceProperties
 export type CloudsProperties = { Color: Color3?, Cover: number?, Density: number?, Enabled: boolean? } & InstanceProperties
 export type SeatProperties = { Disabled: boolean? } & PartProperties
 export type ParticleEmitterProperties = { Acceleration: Vector3?, Brightness: number?, Color: ColorSequence?, Drag: number?, EmissionDirection: Enum.NormalId?, Enabled: boolean?, FlipbookFramerate: NumberRange?, FlipbookIncompatible: string?, FlipbookLayout: Enum.ParticleFlipbookLayout?, FlipbookMode: Enum.ParticleFlipbookMode?, FlipbookStartRandom: boolean?, Lifetime: NumberRange?, LightEmission: number?, LightInfluence: number?, LockedToPart: boolean?, Orientation: Enum.ParticleOrientation?, Rate: number?, RotSpeed: NumberRange?, Rotation: NumberRange?, Shape: Enum.ParticleEmitterShape?, ShapeInOut: Enum.ParticleEmitterShapeInOut?, ShapePartial: number?, ShapeStyle: Enum.ParticleEmitterShapeStyle?, Size: NumberSequence?, Speed: NumberRange?, SpreadAngle: Vector2?, Squash: NumberSequence?, Texture: string?, TimeScale: number?, Transparency: NumberSequence?, VelocityInheritance: number?, WindAffectsDrag: boolean?, ZOffset: number? } & InstanceProperties
@@ -120,141 +119,141 @@ export type ShirtGraphicProperties = { Color3: Color3?, Graphic: string? } & Ins
 export type LocalizationTableProperties = { SourceLocaleId: string? } & InstanceProperties
 export type BrickColorValueProperties = { Value: BrickColor? } & InstanceProperties
 export type WireProperties = { SourceInstance: Instance?, SourceName: string?, TargetInstance: Instance?, TargetName: string? } & InstanceProperties
-export type PathfindingModifierProperties = { Label: string?, PassThrough: boolean? } & InstanceProperties
-export type SmokeProperties = { Color: Color3?, Enabled: boolean?, Opacity: number?, RiseVelocity: number?, Size: number?, TimeScale: number? } & InstanceProperties
 export type VideoPlayerProperties = { Asset: string?, AutoLoad: boolean?, Looping: boolean?, PlaybackSpeed: number?, Thumbnail: string?, TimePosition: number?, Volume: number? } & InstanceProperties
 export type VideoDeviceInputProperties = { Active: boolean?, CameraId: string?, CaptureQuality: Enum.VideoDeviceCaptureQuality? } & InstanceProperties
 export type StringValueProperties = { Value: string? } & InstanceProperties
+export type SmokeProperties = { Color: Color3?, Enabled: boolean?, Opacity: number?, RiseVelocity: number?, Size: number?, TimeScale: number? } & InstanceProperties
+export type AudioListenerProperties = { AudioInteractionGroup: string?, SimulationFidelity: Enum.AudioSimulationFidelity? } & InstanceProperties
 export type NumberValueProperties = { Value: number? } & InstanceProperties
 export type StyleDeriveProperties = { StyleSheet: StyleSheet? } & InstanceProperties
 export type TorqueProperties = { RelativeTo: Enum.ActuatorRelativeTo?, Torque: Vector3? } & ConstraintProperties
 export type UniversalConstraintProperties = { LimitsEnabled: boolean?, MaxAngle: number?, Radius: number?, Restitution: number? } & ConstraintProperties
 export type PointLightProperties = { Range: number? } & LightProperties
+export type UIStrokeProperties = { ApplyStrokeMode: Enum.ApplyStrokeMode?, Color: Color3?, Enabled: boolean?, LineJoinMode: Enum.LineJoinMode?, Thickness: number?, Transparency: number? } & InstanceProperties
 export type CanvasGroupProperties = { GroupColor3: Color3?, GroupTransparency: number? } & GuiObjectProperties
 export type SpotLightProperties = { Angle: number?, Face: Enum.NormalId?, Range: number? } & LightProperties
+export type UIPageLayoutProperties = { Animated: boolean?, Circular: boolean?, EasingDirection: Enum.EasingDirection?, EasingStyle: Enum.EasingStyle?, GamepadInputEnabled: boolean?, Padding: UDim?, ScrollWheelInputEnabled: boolean?, TouchInputEnabled: boolean?, TweenTime: number? } & UIGridStyleLayoutProperties
 export type BoneProperties = { Transform: CFrame? } & AttachmentProperties
-export type AdGuiProperties = { AdShape: Enum.AdShape?, EnableVideoAds: boolean?, FallbackImage: string? } & SurfaceGuiBaseProperties
 export type ToolProperties = { CanBeDropped: boolean?, Enabled: boolean?, Grip: CFrame?, ManualActivationOnly: boolean?, RequiresHandle: boolean?, ToolTip: string? } & BackpackItemProperties
 export type TextureProperties = { OffsetStudsU: number?, OffsetStudsV: number?, StudsPerTileU: number?, StudsPerTileV: number? } & DecalProperties
 export type ScriptProperties = { Source: string? } & BaseScriptProperties
-export type UIStrokeProperties = { ApplyStrokeMode: Enum.ApplyStrokeMode?, Color: Color3?, Enabled: boolean?, LineJoinMode: Enum.LineJoinMode?, Thickness: number?, Transparency: number? } & InstanceProperties
+export type UIFlexItemProperties = { FlexMode: Enum.UIFlexMode?, GrowRatio: number?, ItemLineAlignment: Enum.ItemLineAlignment?, ShrinkRatio: number? } & InstanceProperties
 export type AudioChannelSplitterProperties = { Layout: Enum.AudioChannelLayout? } & InstanceProperties
 export type LineHandleAdornmentProperties = { Length: number?, Thickness: number? } & HandleAdornmentProperties
-export type BoxHandleAdornmentProperties = { Size: Vector3? } & HandleAdornmentProperties
-export type UIPageLayoutProperties = { Animated: boolean?, Circular: boolean?, EasingDirection: Enum.EasingDirection?, EasingStyle: Enum.EasingStyle?, GamepadInputEnabled: boolean?, Padding: UDim?, ScrollWheelInputEnabled: boolean?, TouchInputEnabled: boolean?, TweenTime: number? } & UIGridStyleLayoutProperties
-export type AudioFilterProperties = { Bypass: boolean?, FilterType: Enum.AudioFilterType?, Frequency: number?, Gain: number?, Q: number? } & InstanceProperties
-export type ReverbSoundEffectProperties = { DecayTime: number?, Density: number?, Diffusion: number?, DryLevel: number?, WetLevel: number? } & SoundEffectProperties
-export type UIFlexItemProperties = { FlexMode: Enum.UIFlexMode?, GrowRatio: number?, ItemLineAlignment: Enum.ItemLineAlignment?, ShrinkRatio: number? } & InstanceProperties
-export type BuoyancySensorProperties = { FullySubmerged: boolean?, TouchingSurface: boolean? } & SensorBaseProperties
 export type UIDragDetectorProperties = { ActivatedCursorIcon: string?, BoundingBehavior: Enum.UIDragDetectorBoundingBehavior?, BoundingUI: GuiBase2d?, CursorIcon: string?, DragAxis: Vector2?, DragRelativity: Enum.UIDragDetectorDragRelativity?, DragRotation: number?, DragSpace: Enum.UIDragDetectorDragSpace?, DragStyle: Enum.UIDragDetectorDragStyle?, DragUDim2: UDim2?, Enabled: boolean?, MaxDragAngle: number?, MaxDragTranslation: UDim2?, MinDragAngle: number?, MinDragTranslation: UDim2?, ReferenceUIInstance: GuiObject?, ResponseStyle: Enum.UIDragDetectorResponseStyle?, SelectionModeDragSpeed: UDim2?, SelectionModeRotateSpeed: number?, UIDragSpeedAxisMapping: Enum.UIDragSpeedAxisMapping? } & InstanceProperties
+export type DragDetectorProperties = { ActivatedCursorIcon: string?, ApplyAtCenterOfMass: boolean?, Axis: Vector3?, DragFrame: CFrame?, DragStyle: Enum.DragDetectorDragStyle?, Enabled: boolean?, GamepadModeSwitchKeyCode: Enum.KeyCode?, KeyboardModeSwitchKeyCode: Enum.KeyCode?, MaxDragAngle: number?, MaxDragTranslation: Vector3?, MaxForce: number?, MaxTorque: number?, MinDragAngle: number?, MinDragTranslation: Vector3?, Orientation: Vector3?, PermissionPolicy: Enum.DragDetectorPermissionPolicy?, ReferenceInstance: Instance?, ResponseStyle: Enum.DragDetectorResponseStyle?, Responsiveness: number?, RunLocally: boolean?, SecondaryAxis: Vector3?, TrackballRadialPullFactor: number?, TrackballRollFactor: number?, VRSwitchKeyCode: Enum.KeyCode?, WorldAxis: Vector3?, WorldSecondaryAxis: Vector3? } & ClickDetectorProperties
+export type TextBoxProperties = { ClearTextOnFocus: boolean?, CursorPosition: number?, FontFace: Font?, LineHeight: number?, MaxVisibleGraphemes: number?, MultiLine: boolean?, OpenTypeFeatures: string?, PlaceholderColor3: Color3?, PlaceholderText: string?, RichText: boolean?, SelectionStart: number?, ShowNativeInput: boolean?, Text: string?, TextColor3: Color3?, TextDirection: Enum.TextDirection?, TextEditable: boolean?, TextScaled: boolean?, TextSize: number?, TextStrokeColor3: Color3?, TextStrokeTransparency: number?, TextTransparency: number?, TextTruncate: Enum.TextTruncate?, TextWrapped: boolean?, TextXAlignment: Enum.TextXAlignment?, TextYAlignment: Enum.TextYAlignment? } & GuiObjectProperties
+export type BuoyancySensorProperties = { FullySubmerged: boolean?, TouchingSurface: boolean? } & SensorBaseProperties
+export type AudioEmitterProperties = { AudioInteractionGroup: string?, SimulationFidelity: Enum.AudioSimulationFidelity? } & InstanceProperties
+export type KeyframeMarkerProperties = { Value: string? } & InstanceProperties
 export type UITextSizeConstraintProperties = { MaxTextSize: number?, MinTextSize: number? } & InstanceProperties
-export type DebuggerWatchProperties = { Expression: string? } & InstanceProperties
 export type NoCollisionConstraintProperties = { Enabled: boolean?, Part0: BasePart?, Part1: BasePart? } & InstanceProperties
+export type BubbleChatMessagePropertiesProperties = { BackgroundColor3: Color3?, BackgroundTransparency: number?, FontFace: Font?, TailVisible: boolean?, TextColor3: Color3?, TextSize: number? } & TextChatMessagePropertiesProperties
 export type UIAspectRatioConstraintProperties = { AspectRatio: number?, AspectType: Enum.AspectType?, DominantAxis: Enum.DominantAxis? } & InstanceProperties
 export type RodConstraintProperties = { Length: number?, LimitAngle0: number?, LimitAngle1: number?, LimitsEnabled: boolean?, Thickness: number? } & ConstraintProperties
 export type FileMeshProperties = { MeshId: string?, TextureId: string? } & DataModelMeshProperties
 export type ShirtProperties = { ShirtTemplate: string? } & ClothingProperties
-export type BubbleChatMessagePropertiesProperties = { BackgroundColor3: Color3?, BackgroundTransparency: number?, FontFace: Font?, TailVisible: boolean?, TextColor3: Color3?, TextSize: number? } & TextChatMessagePropertiesProperties
-export type ColorGradingEffectProperties = { TonemapperPreset: Enum.TonemapperPreset? } & PostEffectProperties
-export type GetTextBoundsParamsProperties = { Font: Font?, RichText: boolean?, Size: number?, Text: string?, Width: number? } & InstanceProperties
-export type DecalProperties = { Color3: Color3?, Texture: string?, Transparency: number?, ZIndex: number? } & FaceInstanceProperties
 export type TextChatCommandProperties = { AutocompleteVisible: boolean?, Enabled: boolean?, PrimaryAlias: string?, SecondaryAlias: string? } & InstanceProperties
-export type NumberPoseProperties = { Value: number? } & PoseBaseProperties
-export type CharacterMeshProperties = { BaseTextureId: number?, BodyPart: Enum.BodyPart?, MeshId: number?, OverlayTextureId: number? } & InstanceProperties
-export type BodyColorsProperties = { HeadColor: BrickColor?, HeadColor3: Color3?, LeftArmColor: BrickColor?, LeftArmColor3: Color3?, LeftLegColor: BrickColor?, LeftLegColor3: Color3?, RightArmColor: BrickColor?, RightArmColor3: Color3?, RightLegColor: BrickColor?, RightLegColor3: Color3?, TorsoColor: BrickColor?, TorsoColor3: Color3? } & InstanceProperties
+export type DebuggerWatchProperties = { Expression: string? } & InstanceProperties
+export type GetTextBoundsParamsProperties = { Font: Font?, RichText: boolean?, Size: number?, Text: string?, Width: number? } & InstanceProperties
+export type DecalProperties = { Color3: Color3?, Texture: string?, TextureContent: string?, Transparency: number?, ZIndex: number? } & FaceInstanceProperties
+export type AudioFaderProperties = { Bypass: boolean?, Volume: number? } & InstanceProperties
 export type SurfaceAppearanceProperties = { Color: Color3? } & InstanceProperties
+export type CharacterMeshProperties = { BaseTextureId: number?, BodyPart: Enum.BodyPart?, MeshId: number?, OverlayTextureId: number? } & InstanceProperties
 export type StyleLinkProperties = { StyleSheet: StyleSheet? } & InstanceProperties
 export type StyleRuleProperties = { Priority: number?, Selector: string? } & InstanceProperties
+export type BodyColorsProperties = { HeadColor: BrickColor?, HeadColor3: Color3?, LeftArmColor: BrickColor?, LeftArmColor3: Color3?, LeftLegColor: BrickColor?, LeftLegColor3: Color3?, RightArmColor: BrickColor?, RightArmColor3: Color3?, RightLegColor: BrickColor?, RightLegColor3: Color3?, TorsoColor: BrickColor?, TorsoColor3: Color3? } & InstanceProperties
+export type DepthOfFieldEffectProperties = { FarIntensity: number?, FocusDistance: number?, InFocusRadius: number?, NearIntensity: number? } & PostEffectProperties
 export type UISizeConstraintProperties = { MaxSize: Vector2?, MinSize: Vector2? } & InstanceProperties
 export type Path2DProperties = { Closed: boolean?, Color3: Color3?, Thickness: number?, Visible: boolean?, ZIndex: number? } & InstanceProperties
 export type VehicleSeatProperties = { Disabled: boolean?, HeadsUpDisplay: boolean?, MaxSpeed: number?, Steer: number?, SteerFloat: number?, Throttle: number?, ThrottleFloat: number?, Torque: number?, TurnSpeed: number? } & BasePartProperties
-export type IntValueProperties = { Value: number? } & InstanceProperties
 export type StudioAttachmentProperties = { AutoHideParent: boolean?, IsArrowVisible: boolean?, Offset: Vector2?, SourceAnchorPoint: Vector2?, TargetAnchorPoint: Vector2? } & InstanceProperties
-export type ModuleScriptProperties = { Source: string? } & InstanceProperties
+export type IntValueProperties = { Value: number? } & InstanceProperties
+export type SparklesProperties = { Enabled: boolean?, SparkleColor: Color3?, TimeScale: number? } & InstanceProperties
 export type UIGridLayoutProperties = { CellPadding: UDim2?, CellSize: UDim2?, FillDirectionMaxCells: number?, StartCorner: Enum.StartCorner? } & UIGridStyleLayoutProperties
 export type SoundGroupProperties = { Volume: number? } & InstanceProperties
-export type SunRaysEffectProperties = { Intensity: number?, Spread: number? } & PostEffectProperties
-export type SparklesProperties = { Enabled: boolean?, SparkleColor: Color3?, TimeScale: number? } & InstanceProperties
+export type ReverbSoundEffectProperties = { DecayTime: number?, Density: number?, Diffusion: number?, DryLevel: number?, WetLevel: number? } & SoundEffectProperties
 export type PitchShiftSoundEffectProperties = { Octave: number? } & SoundEffectProperties
 export type EqualizerSoundEffectProperties = { HighGain: number?, LowGain: number?, MidGain: number? } & SoundEffectProperties
-export type AlignPositionProperties = { ApplyAtCenterOfMass: boolean?, ForceLimitMode: Enum.ForceLimitMode?, ForceRelativeTo: Enum.ActuatorRelativeTo?, MaxAxesForce: Vector3?, MaxForce: number?, MaxVelocity: number?, Mode: Enum.PositionAlignmentMode?, Position: Vector3?, ReactionForceEnabled: boolean?, Responsiveness: number?, RigidityEnabled: boolean? } & ConstraintProperties
 export type EchoSoundEffectProperties = { Delay: number?, DryLevel: number?, Feedback: number?, WetLevel: number? } & SoundEffectProperties
-export type IKControlProperties = { ChainRoot: Instance?, Enabled: boolean?, EndEffector: Instance?, EndEffectorOffset: CFrame?, Offset: CFrame?, Pole: Instance?, Priority: number?, SmoothTime: number?, Target: Instance?, Type: Enum.IKControlType?, Weight: number? } & InstanceProperties
 export type DistortionSoundEffectProperties = { Level: number? } & SoundEffectProperties
+export type AlignPositionProperties = { ApplyAtCenterOfMass: boolean?, ForceLimitMode: Enum.ForceLimitMode?, ForceRelativeTo: Enum.ActuatorRelativeTo?, MaxAxesForce: Vector3?, MaxForce: number?, MaxVelocity: number?, Mode: Enum.PositionAlignmentMode?, Position: Vector3?, ReactionForceEnabled: boolean?, Responsiveness: number?, RigidityEnabled: boolean? } & ConstraintProperties
+export type ChorusSoundEffectProperties = { Depth: number?, Mix: number?, Rate: number? } & SoundEffectProperties
+export type IKControlProperties = { ChainRoot: Instance?, Enabled: boolean?, EndEffector: Instance?, EndEffectorOffset: CFrame?, Offset: CFrame?, Pole: Instance?, Priority: number?, SmoothTime: number?, Target: Instance?, Type: Enum.IKControlType?, Weight: number? } & InstanceProperties
 export type ScrollingFrameProperties = { AutomaticCanvasSize: Enum.AutomaticSize?, BottomImage: string?, CanvasPosition: Vector2?, CanvasSize: UDim2?, ElasticBehavior: Enum.ElasticBehavior?, HorizontalScrollBarInset: Enum.ScrollBarInset?, MidImage: string?, ScrollBarImageColor3: Color3?, ScrollBarImageTransparency: number?, ScrollBarThickness: number?, ScrollingDirection: Enum.ScrollingDirection?, ScrollingEnabled: boolean?, TopImage: string?, VerticalScrollBarInset: Enum.ScrollBarInset?, VerticalScrollBarPosition: Enum.VerticalScrollBarPosition? } & GuiObjectProperties
 export type HighlightProperties = { Adornee: Instance?, DepthMode: Enum.HighlightDepthMode?, Enabled: boolean?, FillColor: Color3?, FillTransparency: number?, OutlineColor: Color3?, OutlineTransparency: number? } & InstanceProperties
-export type ChorusSoundEffectProperties = { Depth: number?, Mix: number?, Rate: number? } & SoundEffectProperties
-export type MeshPartProperties = { TextureID: string? } & BasePartProperties
+export type MeshPartProperties = { TextureContent: string?, TextureID: string? } & BasePartProperties
 export type AngularVelocityProperties = { AngularVelocity: Vector3?, MaxTorque: number?, ReactionTorqueEnabled: boolean?, RelativeTo: Enum.ActuatorRelativeTo? } & ConstraintProperties
-export type PlayerProperties = { AutoJumpEnabled: boolean?, CameraMaxZoomDistance: number?, CameraMinZoomDistance: number?, CameraMode: Enum.CameraMode?, CanLoadCharacterAppearance: boolean?, Character: Model?, CharacterAppearanceId: number?, DevCameraOcclusionMode: Enum.DevCameraOcclusionMode?, DevComputerCameraMode: Enum.DevComputerCameraMovementMode?, DevComputerMovementMode: Enum.DevComputerMovementMode?, DevEnableMouseLock: boolean?, DevTouchCameraMode: Enum.DevTouchCameraMovementMode?, DevTouchMovementMode: Enum.DevTouchMovementMode?, DisplayName: string?, HasVerifiedBadge: boolean?, HealthDisplayDistance: number?, NameDisplayDistance: number?, Neutral: boolean?, ReplicationFocus: Instance?, RespawnLocation: SpawnLocation?, Team: Team?, TeamColor: BrickColor?, UserId: number? } & InstanceProperties
 export type InputContextProperties = { Enabled: boolean?, Priority: number?, Sink: boolean? } & InstanceProperties
-export type BeamProperties = { Attachment0: Attachment?, Attachment1: Attachment?, Brightness: number?, Color: ColorSequence?, CurveSize0: number?, CurveSize1: number?, Enabled: boolean?, FaceCamera: boolean?, LightEmission: number?, LightInfluence: number?, Segments: number?, Texture: string?, TextureLength: number?, TextureMode: Enum.TextureMode?, TextureSpeed: number?, Transparency: NumberSequence?, Width0: number?, Width1: number?, ZOffset: number? } & InstanceProperties
-export type DialogChoiceProperties = { GoodbyeChoiceActive: boolean?, GoodbyeDialog: string?, ResponseDialog: string?, UserDialog: string? } & InstanceProperties
+export type AudioDeviceInputProperties = { AccessType: Enum.AccessModifierType?, Muted: boolean?, Player: Player?, Volume: number? } & InstanceProperties
 export type AnimatorProperties = { PreferLodEnabled: boolean? } & InstanceProperties
+export type DialogChoiceProperties = { GoodbyeChoiceActive: boolean?, GoodbyeDialog: string?, ResponseDialog: string?, UserDialog: string? } & InstanceProperties
 export type TerrainDetailProperties = { Face: Enum.TerrainFace?, MaterialPattern: Enum.MaterialPattern?, StudsPerTile: number? } & InstanceProperties
 export type AudioChorusProperties = { Bypass: boolean?, Depth: number?, Mix: number?, Rate: number? } & InstanceProperties
+export type NumberPoseProperties = { Value: number? } & PoseBaseProperties
+export type RenderingTestProperties = { CFrame: CFrame?, ComparisonDiffThreshold: number?, ComparisonMethod: Enum.RenderingTestComparisonMethod?, ComparisonPsnrThreshold: number?, Description: string?, FieldOfView: number?, PerfTest: boolean?, QualityAuto: boolean?, QualityLevel: number?, RenderingTestFrameCount: number?, ShouldSkip: boolean?, Ticket: string?, Timeout: number? } & InstanceProperties
 export type TextChatMessagePropertiesProperties = { PrefixText: string?, Text: string?, Translation: string? } & InstanceProperties
 export type PantsProperties = { PantsTemplate: string? } & ClothingProperties
-export type RenderingTestProperties = { CFrame: CFrame?, ComparisonDiffThreshold: number?, ComparisonMethod: Enum.RenderingTestComparisonMethod?, ComparisonPsnrThreshold: number?, Description: string?, FieldOfView: number?, PerfTest: boolean?, QualityAuto: boolean?, QualityLevel: number?, RenderingTestFrameCount: number?, ShouldSkip: boolean?, Ticket: string?, Timeout: number? } & InstanceProperties
-export type AnimationProperties = { AnimationId: string? } & InstanceProperties
 export type ReflectionMetadataClassProperties = { ExplorerImageIndex: number?, ExplorerOrder: number?, Insertable: boolean?, PreferredParent: string? } & ReflectionMetadataItemProperties
+export type AnimationProperties = { AnimationId: string? } & InstanceProperties
+export type ProximityPromptProperties = { ActionText: string?, AutoLocalize: boolean?, ClickablePrompt: boolean?, Enabled: boolean?, Exclusivity: Enum.ProximityPromptExclusivity?, GamepadKeyCode: Enum.KeyCode?, HoldDuration: number?, KeyboardKeyCode: Enum.KeyCode?, MaxActivationDistance: number?, ObjectText: string?, RequiresLineOfSight: boolean?, RootLocalizationTable: LocalizationTable?, Style: Enum.ProximityPromptStyle?, UIOffset: Vector2? } & InstanceProperties
+export type SunRaysEffectProperties = { Intensity: number?, Spread: number? } & PostEffectProperties
 export type ModelProperties = { ModelStreamingMode: Enum.ModelStreamingMode?, PrimaryPart: BasePart?, WorldPivot: CFrame? } & InstanceProperties
 export type VelocityMotorProperties = { CurrentAngle: number?, DesiredAngle: number?, Hole: Hole?, MaxVelocity: number? } & JointInstanceProperties
-export type ProximityPromptProperties = { ActionText: string?, AutoLocalize: boolean?, ClickablePrompt: boolean?, Enabled: boolean?, Exclusivity: Enum.ProximityPromptExclusivity?, GamepadKeyCode: Enum.KeyCode?, HoldDuration: number?, KeyboardKeyCode: Enum.KeyCode?, MaxActivationDistance: number?, ObjectText: string?, RequiresLineOfSight: boolean?, RootLocalizationTable: LocalizationTable?, Style: Enum.ProximityPromptStyle?, UIOffset: Vector2? } & InstanceProperties
-export type PartProperties = { Shape: Enum.PartType? } & BasePartProperties
-export type DepthOfFieldEffectProperties = { FarIntensity: number?, FocusDistance: number?, InFocusRadius: number?, NearIntensity: number? } & PostEffectProperties
+export type ColorGradingEffectProperties = { TonemapperPreset: Enum.TonemapperPreset? } & PostEffectProperties
 export type BlurEffectProperties = { Size: number? } & PostEffectProperties
 export type BloomEffectProperties = { Intensity: number?, Size: number?, Threshold: number? } & PostEffectProperties
+export type PartProperties = { Shape: Enum.PartType? } & BasePartProperties
 export type AudioSearchParamsProperties = { Album: string?, Artist: string?, AudioSubType: Enum.AudioSubType?, MaxDuration: number?, MinDuration: number?, SearchKeyword: string?, Tag: string?, Title: string? } & InstanceProperties
 export type RayValueProperties = { Value: Ray? } & InstanceProperties
-export type CameraProperties = { CFrame: CFrame?, CameraSubject: Instance?, CameraType: Enum.CameraType?, DiagonalFieldOfView: number?, FieldOfView: number?, FieldOfViewMode: Enum.FieldOfViewMode?, Focus: CFrame?, HeadLocked: boolean?, HeadScale: number?, MaxAxisFieldOfView: number?, VRTiltAndRollEnabled: boolean? } & InstanceProperties
+export type PartOperationProperties = { UsePartColor: boolean? } & BasePartProperties
 export type UIPaddingProperties = { PaddingBottom: UDim?, PaddingLeft: UDim?, PaddingRight: UDim?, PaddingTop: UDim? } & InstanceProperties
+export type PlayerProperties = { AutoJumpEnabled: boolean?, CameraMaxZoomDistance: number?, CameraMinZoomDistance: number?, CameraMode: Enum.CameraMode?, CanLoadCharacterAppearance: boolean?, Character: Model?, CharacterAppearanceId: number?, DevCameraOcclusionMode: Enum.DevCameraOcclusionMode?, DevComputerCameraMode: Enum.DevComputerCameraMovementMode?, DevComputerMovementMode: Enum.DevComputerMovementMode?, DevEnableMouseLock: boolean?, DevTouchCameraMode: Enum.DevTouchCameraMovementMode?, DevTouchMovementMode: Enum.DevTouchMovementMode?, DisplayName: string?, HasVerifiedBadge: boolean?, HealthDisplayDistance: number?, NameDisplayDistance: number?, Neutral: boolean?, ReplicationFocus: Instance?, RespawnLocation: SpawnLocation?, Team: Team?, TeamColor: BrickColor?, UserId: number? } & InstanceProperties
 export type SoundProperties = { LoopRegion: NumberRange?, Looped: boolean?, PlayOnRemove: boolean?, PlaybackRegion: NumberRange?, PlaybackRegionsEnabled: boolean?, PlaybackSpeed: number?, Playing: boolean?, RollOffMaxDistance: number?, RollOffMinDistance: number?, RollOffMode: Enum.RollOffMode?, SoundGroup: SoundGroup?, SoundId: string?, TimePosition: number?, Volume: number? } & InstanceProperties
 export type BallSocketConstraintProperties = { LimitsEnabled: boolean?, MaxFrictionTorque: number?, Radius: number?, Restitution: number?, TwistLimitsEnabled: boolean?, TwistLowerAngle: number?, TwistUpperAngle: number?, UpperAngle: number? } & ConstraintProperties
-export type KeyframeMarkerProperties = { Value: string? } & InstanceProperties
+export type PathfindingModifierProperties = { Label: string?, PassThrough: boolean? } & InstanceProperties
 export type ScreenGuiProperties = { ClipToDeviceSafeArea: boolean?, DisplayOrder: number?, IgnoreGuiInset: boolean?, SafeAreaCompatibility: Enum.SafeAreaCompatibility?, ScreenInsets: Enum.ScreenInsets? } & LayerCollectorProperties
 export type SurfaceGuiProperties = { AlwaysOnTop: boolean?, Brightness: number?, CanvasSize: Vector2?, ClipsDescendants: boolean?, LightInfluence: number?, MaxDistance: number?, PixelsPerStud: number?, SizingMode: Enum.SurfaceGuiSizingMode?, ToolPunchThroughDistance: number?, ZOffset: number? } & SurfaceGuiBaseProperties
-export type ForceFieldProperties = { Visible: boolean? } & InstanceProperties
-export type TextBoxProperties = { ClearTextOnFocus: boolean?, CursorPosition: number?, FontFace: Font?, LineHeight: number?, MaxVisibleGraphemes: number?, MultiLine: boolean?, OpenTypeFeatures: string?, PlaceholderColor3: Color3?, PlaceholderText: string?, RichText: boolean?, SelectionStart: number?, ShowNativeInput: boolean?, Text: string?, TextColor3: Color3?, TextDirection: Enum.TextDirection?, TextEditable: boolean?, TextScaled: boolean?, TextSize: number?, TextStrokeColor3: Color3?, TextStrokeTransparency: number?, TextTransparency: number?, TextTruncate: Enum.TextTruncate?, TextWrapped: boolean?, TextXAlignment: Enum.TextXAlignment?, TextYAlignment: Enum.TextYAlignment? } & GuiObjectProperties
-export type Color3ValueProperties = { Value: Color3? } & InstanceProperties
 export type AudioCompressorProperties = { Attack: number?, Bypass: boolean?, MakeupGain: number?, Ratio: number?, Release: number?, Threshold: number? } & InstanceProperties
-export type AudioDeviceOutputProperties = { Player: Player? } & InstanceProperties
+export type ForceFieldProperties = { Visible: boolean? } & InstanceProperties
+export type Color3ValueProperties = { Value: Color3? } & InstanceProperties
+export type AdGuiProperties = { AdShape: Enum.AdShape?, EnableVideoAds: boolean?, FallbackImage: string? } & SurfaceGuiBaseProperties
 export type FrameProperties = { Style: Enum.FrameStyle? } & GuiObjectProperties
 export type MaterialVariantProperties = { CustomPhysicalProperties: PhysicalProperties?, MaterialPattern: Enum.MaterialPattern?, StudsPerTile: number? } & InstanceProperties
+export type AudioFilterProperties = { Bypass: boolean?, FilterType: Enum.AudioFilterType?, Frequency: number?, Gain: number?, Q: number? } & InstanceProperties
 export type AudioFlangerProperties = { Bypass: boolean?, Depth: number?, Mix: number?, Rate: number? } & InstanceProperties
-export type AlignOrientationProperties = { AlignType: Enum.AlignType?, CFrame: CFrame?, LookAtPosition: Vector3?, MaxAngularVelocity: number?, MaxTorque: number?, Mode: Enum.OrientationAlignmentMode?, PrimaryAxis: Vector3?, PrimaryAxisOnly: boolean?, ReactionTorqueEnabled: boolean?, Responsiveness: number?, RigidityEnabled: boolean?, SecondaryAxis: Vector3? } & ConstraintProperties
+export type CameraProperties = { CFrame: CFrame?, CameraSubject: Instance?, CameraType: Enum.CameraType?, DiagonalFieldOfView: number?, FieldOfView: number?, FieldOfViewMode: Enum.FieldOfViewMode?, Focus: CFrame?, HeadLocked: boolean?, HeadScale: number?, MaxAxisFieldOfView: number?, VRTiltAndRollEnabled: boolean? } & InstanceProperties
 export type SphereHandleAdornmentProperties = { Radius: number? } & HandleAdornmentProperties
-export type PartOperationProperties = { UsePartColor: boolean? } & BasePartProperties
-export type AudioPlayerProperties = { Asset: string?, AutoLoad: boolean?, LoopRegion: NumberRange?, Looping: boolean?, PlaybackRegion: NumberRange?, PlaybackSpeed: number?, TimePosition: number?, Volume: number? } & InstanceProperties
 export type SpawnLocationProperties = { AllowTeamChangeOnTouch: boolean?, Duration: number?, Enabled: boolean?, Neutral: boolean?, TeamColor: BrickColor? } & PartProperties
+export type AudioPlayerProperties = { Asset: string?, AutoLoad: boolean?, LoopRegion: NumberRange?, Looping: boolean?, PlaybackRegion: NumberRange?, PlaybackSpeed: number?, TimePosition: number?, Volume: number? } & InstanceProperties
 export type TrailProperties = { Attachment0: Attachment?, Attachment1: Attachment?, Brightness: number?, Color: ColorSequence?, Enabled: boolean?, FaceCamera: boolean?, Lifetime: number?, LightEmission: number?, LightInfluence: number?, MaxLength: number?, MinLength: number?, Texture: string?, TextureLength: number?, TextureMode: Enum.TextureMode?, Transparency: NumberSequence?, WidthScale: NumberSequence? } & InstanceProperties
-export type InputBindingProperties = { KeyCode: Enum.KeyCode?, UIButton: GuiButton? } & InstanceProperties
-export type AudioDeviceInputProperties = { AccessType: Enum.AccessModifierType?, Muted: boolean?, Player: Player?, Volume: number? } & InstanceProperties
-export type AudioFaderProperties = { Bypass: boolean?, Volume: number? } & InstanceProperties
+export type BeamProperties = { Attachment0: Attachment?, Attachment1: Attachment?, Brightness: number?, Color: ColorSequence?, CurveSize0: number?, CurveSize1: number?, Enabled: boolean?, FaceCamera: boolean?, LightEmission: number?, LightInfluence: number?, Segments: number?, Texture: string?, TextureLength: number?, TextureMode: Enum.TextureMode?, TextureSpeed: number?, Transparency: NumberSequence?, Width0: number?, Width1: number?, ZOffset: number? } & InstanceProperties
+export type InputBindingProperties = { Down: Enum.KeyCode?, KeyCode: Enum.KeyCode?, Left: Enum.KeyCode?, PressedThreshold: number?, ReleasedThreshold: number?, Right: Enum.KeyCode?, Scale: number?, UIButton: GuiButton?, Up: Enum.KeyCode?, Vector2Scale: Vector2? } & InstanceProperties
 export type VideoFrameProperties = { Looped: boolean?, Playing: boolean?, TimePosition: number?, Video: string?, Volume: number? } & GuiObjectProperties
 export type AudioEchoProperties = { Bypass: boolean?, DelayTime: number?, DryLevel: number?, Feedback: number?, RampTime: number?, WetLevel: number? } & InstanceProperties
 export type AudioDistortionProperties = { Bypass: boolean?, Level: number? } & InstanceProperties
 export type AtmosphereProperties = { Color: Color3?, Decay: Color3?, Density: number?, Glare: number?, Haze: number?, Offset: number? } & InstanceProperties
 export type CompressorSoundEffectProperties = { Attack: number?, GainMakeup: number?, Ratio: number?, Release: number?, SideChain: Instance?, Threshold: number? } & SoundEffectProperties
+export type BoxHandleAdornmentProperties = { Size: Vector3? } & HandleAdornmentProperties
+export type HingeConstraintProperties = { ActuatorType: Enum.ActuatorType?, AngularResponsiveness: number?, AngularSpeed: number?, AngularVelocity: number?, LimitsEnabled: boolean?, LowerAngle: number?, MotorMaxAcceleration: number?, MotorMaxTorque: number?, Radius: number?, Restitution: number?, ServoMaxTorque: number?, TargetAngle: number?, UpperAngle: number? } & ConstraintProperties
+export type ModuleScriptProperties = { Source: string? } & InstanceProperties
 export type SpringConstraintProperties = { Coils: number?, Damping: number?, FreeLength: number?, LimitsEnabled: boolean?, MaxForce: number?, MaxLength: number?, MinLength: number?, Radius: number?, Stiffness: number?, Thickness: number? } & ConstraintProperties
-export type AudioEmitterProperties = { AudioInteractionGroup: string?, SimulationFidelity: Enum.AudioSimulationFidelity? } & InstanceProperties
-export type ConeHandleAdornmentProperties = { Height: number?, Radius: number? } & HandleAdornmentProperties
+export type AudioDeviceOutputProperties = { Player: Player? } & InstanceProperties
 export type LineForceProperties = { ApplyAtCenterOfMass: boolean?, InverseSquareLaw: boolean?, Magnitude: number?, MaxForce: number?, ReactionForceEnabled: boolean? } & ConstraintProperties
+export type ConeHandleAdornmentProperties = { Height: number?, Radius: number? } & HandleAdornmentProperties
 export type AudioEqualizerProperties = { Bypass: boolean?, HighGain: number?, LowGain: number?, MidGain: number?, MidRange: NumberRange? } & InstanceProperties
 export type LinearVelocityProperties = { ForceLimitMode: Enum.ForceLimitMode?, ForceLimitsEnabled: boolean?, LineDirection: Vector3?, LineVelocity: number?, MaxAxesForce: Vector3?, MaxForce: number?, MaxPlanarAxesForce: Vector2?, PlaneVelocity: Vector2?, PrimaryTangentAxis: Vector3?, RelativeTo: Enum.ActuatorRelativeTo?, SecondaryTangentAxis: Vector3?, VectorVelocity: Vector3?, VelocityConstraintMode: Enum.VelocityConstraintMode? } & ConstraintProperties
 export type UICornerProperties = { CornerRadius: UDim? } & InstanceProperties
-export type DragDetectorProperties = { ActivatedCursorIcon: string?, ApplyAtCenterOfMass: boolean?, Axis: Vector3?, DragFrame: CFrame?, DragStyle: Enum.DragDetectorDragStyle?, Enabled: boolean?, GamepadModeSwitchKeyCode: Enum.KeyCode?, KeyboardModeSwitchKeyCode: Enum.KeyCode?, MaxDragAngle: number?, MaxDragTranslation: Vector3?, MaxForce: number?, MaxTorque: number?, MinDragAngle: number?, MinDragTranslation: Vector3?, Orientation: Vector3?, PermissionPolicy: Enum.DragDetectorPermissionPolicy?, ReferenceInstance: Instance?, ResponseStyle: Enum.DragDetectorResponseStyle?, Responsiveness: number?, RunLocally: boolean?, SecondaryAxis: Vector3?, TrackballRadialPullFactor: number?, TrackballRollFactor: number?, VRSwitchKeyCode: Enum.KeyCode?, WorldAxis: Vector3?, WorldSecondaryAxis: Vector3? } & ClickDetectorProperties
-export type UITableLayoutProperties = { FillEmptySpaceColumns: boolean?, FillEmptySpaceRows: boolean?, MajorAxis: Enum.TableMajorAxis?, Padding: UDim2? } & UIGridStyleLayoutProperties
 export type DialogProperties = { BehaviorType: Enum.DialogBehaviorType?, ConversationDistance: number?, GoodbyeChoiceActive: boolean?, GoodbyeDialog: string?, InUse: boolean?, InitialPrompt: string?, Purpose: Enum.DialogPurpose?, Tone: Enum.DialogTone?, TriggerDistance: number?, TriggerOffset: Vector3? } & InstanceProperties
+export type UITableLayoutProperties = { FillEmptySpaceColumns: boolean?, FillEmptySpaceRows: boolean?, MajorAxis: Enum.TableMajorAxis?, Padding: UDim2? } & UIGridStyleLayoutProperties
 export type UIGradientProperties = { Color: ColorSequence?, Enabled: boolean?, Offset: Vector2?, Rotation: number?, Transparency: NumberSequence? } & InstanceProperties
+export type AlignOrientationProperties = { AlignType: Enum.AlignType?, CFrame: CFrame?, LookAtPosition: Vector3?, MaxAngularVelocity: number?, MaxTorque: number?, Mode: Enum.OrientationAlignmentMode?, PrimaryAxis: Vector3?, PrimaryAxisOnly: boolean?, ReactionTorqueEnabled: boolean?, Responsiveness: number?, RigidityEnabled: boolean?, SecondaryAxis: Vector3? } & ConstraintProperties
 export type AnimationConstraintProperties = { IsKinematic: boolean?, MaxForce: number?, MaxTorque: number?, Transform: CFrame? } & ConstraintProperties
 export type PVAdornmentProperties = { Adornee: PVInstance? } & GuiBase3dProperties
-export type GuiButtonProperties = { AutoButtonColor: boolean?, Modal: boolean?, Selected: boolean?, Style: Enum.ButtonStyle? } & GuiObjectProperties
+export type GuiButtonProperties = { AutoButtonColor: boolean?, HoverHapticEffect: HapticEffect?, Modal: boolean?, PressHapticEffect: HapticEffect?, Selected: boolean?, Style: Enum.ButtonStyle? } & GuiObjectProperties
 export type ConstraintProperties = { Attachment0: Attachment?, Attachment1: Attachment?, Color: BrickColor?, Enabled: boolean?, Visible: boolean? } & InstanceProperties
 export type FaceInstanceProperties = { Face: Enum.NormalId? } & InstanceProperties
-export type LayerCollectorProperties = { Enabled: boolean?, ResetOnSpawn: boolean?, ZIndexBehavior: Enum.ZIndexBehavior? } & GuiBase2dProperties
 export type PoseBaseProperties = { EasingDirection: Enum.PoseEasingDirection?, EasingStyle: Enum.PoseEasingStyle?, Weight: number? } & InstanceProperties
-export type GuiBase2dProperties = { AutoLocalize: boolean?, RootLocalizationTable: LocalizationTable?, SelectionBehaviorDown: Enum.SelectionBehavior?, SelectionBehaviorLeft: Enum.SelectionBehavior?, SelectionBehaviorRight: Enum.SelectionBehavior?, SelectionBehaviorUp: Enum.SelectionBehavior?, SelectionGroup: boolean? } & InstanceProperties
 export type SensorBaseProperties = { UpdateType: Enum.SensorUpdateType? } & InstanceProperties
 export type BaseScriptProperties = { Disabled: boolean?, Enabled: boolean? } & InstanceProperties
 export type BasePartProperties = { Anchored: boolean?, AssemblyAngularVelocity: Vector3?, AssemblyLinearVelocity: Vector3?, AudioCanCollide: boolean?, BackSurface: Enum.SurfaceType?, BottomSurface: Enum.SurfaceType?, BrickColor: BrickColor?, CFrame: CFrame?, CanCollide: boolean?, CanQuery: boolean?, CanTouch: boolean?, CastShadow: boolean?, CollisionGroup: string?, Color: Color3?, CustomPhysicalProperties: PhysicalProperties?, EnableFluidForces: boolean?, FrontSurface: Enum.SurfaceType?, LeftSurface: Enum.SurfaceType?, Locked: boolean?, Massless: boolean?, Material: Enum.Material?, MaterialVariant: string?, PivotOffset: CFrame?, Reflectance: number?, RightSurface: Enum.SurfaceType?, RootPriority: number?, Rotation: Vector3?, Size: Vector3?, TopSurface: Enum.SurfaceType?, Transparency: number? } & InstanceProperties
@@ -265,17 +264,19 @@ export type InstanceProperties = { Archivable: boolean?, Name: string?, Parent: 
 export type BackpackItemProperties = { TextureId: string? } & ModelProperties
 export type HandleAdornmentProperties = { AdornCullingMode: Enum.AdornCullingMode?, AlwaysOnTop: boolean?, CFrame: CFrame?, SizeRelativeOffset: Vector3?, ZIndex: number? } & PVAdornmentProperties
 export type UIGridStyleLayoutProperties = { FillDirection: Enum.FillDirection?, HorizontalAlignment: Enum.HorizontalAlignment?, SortOrder: Enum.SortOrder?, VerticalAlignment: Enum.VerticalAlignment? } & InstanceProperties
-export type GuiBase3dProperties = { Color3: Color3?, Transparency: number?, Visible: boolean? } & InstanceProperties
 export type SlidingBallConstraintProperties = { ActuatorType: Enum.ActuatorType?, LimitsEnabled: boolean?, LinearResponsiveness: number?, LowerLimit: number?, MotorMaxAcceleration: number?, MotorMaxForce: number?, Restitution: number?, ServoMaxForce: number?, Size: number?, Speed: number?, TargetPosition: number?, UpperLimit: number?, Velocity: number? } & ConstraintProperties
 export type DataModelMeshProperties = { Offset: Vector3?, Scale: Vector3?, VertexColor: Vector3? } & InstanceProperties
-export type ClothingProperties = { Color3: Color3? } & InstanceProperties
 export type GuiObjectProperties = { Active: boolean?, AnchorPoint: Vector2?, AutomaticSize: Enum.AutomaticSize?, BackgroundColor3: Color3?, BackgroundTransparency: number?, BorderColor3: Color3?, BorderMode: Enum.BorderMode?, BorderSizePixel: number?, ClipsDescendants: boolean?, Interactable: boolean?, LayoutOrder: number?, NextSelectionDown: GuiObject?, NextSelectionLeft: GuiObject?, NextSelectionRight: GuiObject?, NextSelectionUp: GuiObject?, Position: UDim2?, Rotation: number?, Selectable: boolean?, SelectionImageObject: GuiObject?, SelectionOrder: number?, Size: UDim2?, SizeConstraint: Enum.SizeConstraint?, Visible: boolean?, ZIndex: number? } & GuiBase2dProperties
 export type SoundEffectProperties = { Enabled: boolean?, Priority: number? } & InstanceProperties
+export type GuiBase3dProperties = { Color3: Color3?, Transparency: number?, Visible: boolean? } & InstanceProperties
 export type LightProperties = { Brightness: number?, Color: Color3?, Enabled: boolean?, Shadows: boolean? } & InstanceProperties
 export type JointInstanceProperties = { C0: CFrame?, C1: CFrame?, Enabled: boolean?, Part0: BasePart?, Part1: BasePart? } & InstanceProperties
 export type ReflectionMetadataItemProperties = { Browsable: boolean?, ClassCategory: string?, ClientOnly: boolean?, Constraint: string?, Deprecated: boolean?, EditingDisabled: boolean?, EditorType: string?, FFlag: string?, IsBackend: boolean?, PropertyOrder: number?, ScriptContext: string?, ServerOnly: boolean?, SliderScaling: string?, UIMaximum: number?, UIMinimum: number?, UINumTicks: number? } & InstanceProperties
 export type PostEffectProperties = { Enabled: boolean? } & InstanceProperties
+export type GuiBase2dProperties = { AutoLocalize: boolean?, RootLocalizationTable: LocalizationTable?, SelectionBehaviorDown: Enum.SelectionBehavior?, SelectionBehaviorLeft: Enum.SelectionBehavior?, SelectionBehaviorRight: Enum.SelectionBehavior?, SelectionBehaviorUp: Enum.SelectionBehavior?, SelectionGroup: boolean? } & InstanceProperties
+export type LayerCollectorProperties = { Enabled: boolean?, ResetOnSpawn: boolean?, ZIndexBehavior: Enum.ZIndexBehavior? } & GuiBase2dProperties
 export type AnimationClipProperties = { Loop: boolean?, Priority: Enum.AnimationPriority? } & InstanceProperties
+export type ClothingProperties = { Color3: Color3? } & InstanceProperties
 export type ObjectProperties = {}
 
 declare function GetPort(id: number?): Port?
@@ -2612,7 +2613,7 @@ end
 declare class Constructor extends PilotObject
 	ClassName: "Constructor"
 
-	function CalculateModelRecipe(self, ...: any): ...any
+	function CalculateModelRecipe(self, modelCode: string?): {[string]: number}
 
 	function Configure(self, properties: {
 		Autolock: boolean?,
@@ -2889,10 +2890,10 @@ declare class Screen extends PilotObject
 		& _CreateElement<"BrickColorValue", BrickColorValue>
 		& _CreateElement<"Accoutrement", Accoutrement>
 		& _CreateElement<"Attachment", Attachment>
-		& _CreateElement<"AudioChannelMixer", AudioChannelMixer>
+		& _CreateElement<"AudioEmitter", AudioEmitter>
 		& _CreateElement<"AudioDeviceOutput", AudioDeviceOutput>
 		& _CreateElement<"PitchShiftSoundEffect", PitchShiftSoundEffect>
-		& _CreateElement<"VectorForce", VectorForce>
+		& _CreateElement<"ImageButton", ImageButton>
 		& _CreateElement<"DialogChoice", DialogChoice>
 		& _CreateElement<"NumberValue", NumberValue>
 		& _CreateElement<"Weld", JointInstance>
@@ -2905,7 +2906,7 @@ declare class Screen extends PilotObject
 		& _CreateElement<"Accessory", Accessory>
 		& _CreateElement<"TextChatMessageProperties", TextChatMessageProperties>
 		& _CreateElement<"UIScale", UIScale>
-		& _CreateElement<"Pants", Pants>
+		& _CreateElement<"KeyframeMarker", KeyframeMarker>
 		& _CreateElement<"CFrameValue", CFrameValue>
 		& _CreateElement<"ImageLabel", ImageLabel>
 		& _CreateElement<"Animation", Animation>
@@ -2921,17 +2922,17 @@ declare class Screen extends PilotObject
 		& _CreateElement<"CanvasGroup", CanvasGroup>
 		& _CreateElement<"SpotLight", SpotLight>
 		& _CreateElement<"AudioReverb", AudioReverb>
-		& _CreateElement<"Bone", Bone>
-		& _CreateElement<"Tool", Tool>
+		& _CreateElement<"AtmosphereSensor" | "FluidForceSensor", SensorBase & any>
+		& _CreateElement<"ArcHandles", ArcHandles>
 		& _CreateElement<"Texture", Texture>
-		& _CreateElement<"ReflectionMetadataMember" | "ReflectionMetadataEnum" | "ReflectionMetadataEnumItem", ReflectionMetadataItem & any>
+		& _CreateElement<"ReflectionMetadataMember" | "ReflectionMetadataEnumItem" | "ReflectionMetadataEnum", ReflectionMetadataItem & any>
 		& _CreateElement<"LocalScript" | "Script", Script & any>
 		& _CreateElement<"StyleRule", StyleRule>
 		& _CreateElement<"AudioChannelSplitter", AudioChannelSplitter>
 		& _CreateElement<"LineHandleAdornment", LineHandleAdornment>
 		& _CreateElement<"NegateOperation" | "IntersectOperation" | "PartOperation" | "UnionOperation", PartOperation & any>
 		& _CreateElement<"DepthOfFieldEffect", DepthOfFieldEffect>
-		& _CreateElement<"AdGui", AdGui>
+		& _CreateElement<"TextBox", TextBox>
 		& _CreateElement<"UIPageLayout", UIPageLayout>
 		& _CreateElement<"DistortionSoundEffect", DistortionSoundEffect>
 		& _CreateElement<"UIPadding", UIPadding>
@@ -2945,11 +2946,12 @@ declare class Screen extends PilotObject
 		& _CreateElement<"ControllerManager", ControllerManager>
 		& _CreateElement<"EchoSoundEffect", EchoSoundEffect>
 		& _CreateElement<"ViewportFrame", ViewportFrame>
-		& _CreateElement<"SpawnLocation", SpawnLocation>
+		& _CreateElement<"AudioTextToSpeech", AudioTextToSpeech>
 		& _CreateElement<"BlurEffect", BlurEffect>
 		& _CreateElement<"UITextSizeConstraint", UITextSizeConstraint>
 		& _CreateElement<"ScreenGui", ScreenGui>
-		& _CreateElement<"AudioFlanger", AudioFlanger>
+		& _CreateElement<"Camera", Camera>
+		& _CreateElement<"Atmosphere", Atmosphere>
 		& _CreateElement<"Dialog", Dialog>
 		& _CreateElement<"AudioCompressor", AudioCompressor>
 		& _CreateElement<"NoCollisionConstraint", NoCollisionConstraint>
@@ -2959,24 +2961,24 @@ declare class Screen extends PilotObject
 		& _CreateElement<"UITableLayout", UITableLayout>
 		& _CreateElement<"UIAspectRatioConstraint", UIAspectRatioConstraint>
 		& _CreateElement<"WeldConstraint", WeldConstraint>
-		& _CreateElement<"DragDetector", DragDetector>
+		& _CreateElement<"Decal", Decal>
 		& _CreateElement<"FileMesh", FileMesh>
-		& _CreateElement<"ColorGradingEffect", ColorGradingEffect>
-		& _CreateElement<"PrismaticConstraint", SlidingBallConstraint>
+		& _CreateElement<"Shirt", Shirt>
+		& _CreateElement<"VideoDisplay", VideoDisplay>
 		& _CreateElement<"Animator", Animator>
-		& _CreateElement<"ColorCorrectionEffect", ColorCorrectionEffect>
+		& _CreateElement<"AudioPitchShifter", AudioPitchShifter>
 		& _CreateElement<"Color3Value", Color3Value>
 		& _CreateElement<"Clouds", Clouds>
-		& _CreateElement<"RodConstraint", RodConstraint>
 		& _CreateElement<"AudioEqualizer", AudioEqualizer>
+		& _CreateElement<"UISizeConstraint", UISizeConstraint>
 		& _CreateElement<"LineForce", LineForce>
 		& _CreateElement<"UIFlexItem", UIFlexItem>
 		& _CreateElement<"Seat", Seat>
-		& _CreateElement<"BlockMesh", DataModelMesh>
+		& _CreateElement<"SpecialMesh", SpecialMesh>
 		& _CreateElement<"DebuggerWatch", DebuggerWatch>
 		& _CreateElement<"VideoDeviceInput", VideoDeviceInput>
-		& _CreateElement<"AudioEmitter", AudioEmitter>
 		& _CreateElement<"ModuleScript", ModuleScript>
+		& _CreateElement<"DragDetector", DragDetector>
 		& _CreateElement<"TextLabel", TextLabel>
 		& _CreateElement<"PathfindingModifier", PathfindingModifier>
 		& _CreateElement<"GetTextBoundsParams", GetTextBoundsParams>
@@ -2984,102 +2986,102 @@ declare class Screen extends PilotObject
 		& _CreateElement<"PlaneConstraint" | "RigidConstraint", Constraint & any>
 		& _CreateElement<"MaterialVariant", MaterialVariant>
 		& _CreateElement<"BubbleChatMessageProperties", BubbleChatMessageProperties>
-		& _CreateElement<"ChorusSoundEffect", ChorusSoundEffect>
+		& _CreateElement<"Team", Team>
 		& _CreateElement<"ImageHandleAdornment", ImageHandleAdornment>
-		& _CreateElement<"ParticleEmitter", ParticleEmitter>
-		& _CreateElement<"Atmosphere", Atmosphere>
+		& _CreateElement<"AudioFader", AudioFader>
+		& _CreateElement<"Pants", Pants>
 		& _CreateElement<"AlignOrientation", AlignOrientation>
 		& _CreateElement<"AudioDistortion", AudioDistortion>
-		& _CreateElement<"AudioDeviceInput", AudioDeviceInput>
+		& _CreateElement<"Beam", Beam>
 		& _CreateElement<"StringValue", StringValue>
 		& _CreateElement<"ObjectValue", ObjectValue>
 		& _CreateElement<"CharacterMesh", CharacterMesh>
 		& _CreateElement<"Part", Part>
 		& _CreateElement<"Wire", Wire>
-		& _CreateElement<"AudioFader", AudioFader>
+		& _CreateElement<"Sound", Sound>
 		& _CreateElement<"AudioEcho", AudioEcho>
-		& _CreateElement<"Camera", Camera>
-		& _CreateElement<"KeyframeMarker", KeyframeMarker>
+		& _CreateElement<"Frame", Frame>
 		& _CreateElement<"ParabolaAdornment", PVAdornment>
+		& _CreateElement<"SpawnLocation", SpawnLocation>
 		& _CreateElement<"AudioPlayer", AudioPlayer>
 		& _CreateElement<"SphereHandleAdornment", SphereHandleAdornment>
 		& _CreateElement<"AudioLimiter", AudioLimiter>
 		& _CreateElement<"AnimationConstraint", AnimationConstraint>
-		& _CreateElement<"Frame", Frame>
-		& _CreateElement<"TextBox", TextBox>
+		& _CreateElement<"AudioFlanger", AudioFlanger>
+		& _CreateElement<"AudioFilter", AudioFilter>
 		& _CreateElement<"BodyColors", BodyColors>
 		& _CreateElement<"Trail", Trail>
 		& _CreateElement<"Sky", Sky>
-		& _CreateElement<"Sound", Sound>
+		& _CreateElement<"AdGui", AdGui>
 		& _CreateElement<"HapticEffect", HapticEffect>
 		& _CreateElement<"KeyframeSequence" | "CurveAnimation", AnimationClip & any>
 		& _CreateElement<"RopeConstraint", RopeConstraint>
 		& _CreateElement<"InputBinding", InputBinding>
 		& _CreateElement<"TextChatCommand", TextChatCommand>
-		& _CreateElement<"RayValue", RayValue>
+		& _CreateElement<"Player", Player>
 		& _CreateElement<"StudioAttachment", StudioAttachment>
-		& _CreateElement<"AudioSearchParams", AudioSearchParams>
+		& _CreateElement<"RayValue", RayValue>
 		& _CreateElement<"SelectionBox", SelectionBox>
 		& _CreateElement<"VehicleSeat", VehicleSeat>
-		& _CreateElement<"BloomEffect", BloomEffect>
+		& _CreateElement<"AudioSearchParams", AudioSearchParams>
 		& _CreateElement<"VideoFrame", VideoFrame>
-		& _CreateElement<"ProximityPrompt", ProximityPrompt>
-		& _CreateElement<"RenderingTest", RenderingTest>
+		& _CreateElement<"BloomEffect", BloomEffect>
+		& _CreateElement<"ColorGradingEffect", ColorGradingEffect>
 		& _CreateElement<"IntValue", IntValue>
-		& _CreateElement<"Beam", Beam>
+		& _CreateElement<"SunRaysEffect", SunRaysEffect>
 		& _CreateElement<"SelectionSphere", SelectionSphere>
 		& _CreateElement<"TrussPart", TrussPart>
-		& _CreateElement<"Player", Player>
+		& _CreateElement<"ProximityPrompt", ProximityPrompt>
 		& _CreateElement<"ControllerPartSensor", ControllerPartSensor>
 		& _CreateElement<"CompressorSoundEffect", CompressorSoundEffect>
-		& _CreateElement<"Team", Team>
-		& _CreateElement<"ArcHandles", ArcHandles>
-		& _CreateElement<"AudioFilter", AudioFilter>
-		& _CreateElement<"Vector3Value", Vector3Value>
-		& _CreateElement<"SunRaysEffect", SunRaysEffect>
+		& _CreateElement<"RenderingTest", RenderingTest>
+		& _CreateElement<"AudioDeviceInput", AudioDeviceInput>
+		& _CreateElement<"VectorForce", VectorForce>
+		& _CreateElement<"UIDragDetector", UIDragDetector>
+		& _CreateElement<"ChorusSoundEffect", ChorusSoundEffect>
 		& _CreateElement<"Motor" | "Motor6D", Motor & any>
 		& _CreateElement<"ReverbSoundEffect", ReverbSoundEffect>
 		& _CreateElement<"TorsionSpringConstraint", TorsionSpringConstraint>
 		& _CreateElement<"UIGridLayout", UIGridLayout>
-		& _CreateElement<"StyleDerive", StyleDerive>
-		& _CreateElement<"SpecialMesh", SpecialMesh>
+		& _CreateElement<"RodConstraint", RodConstraint>
+		& _CreateElement<"Vector3Value", Vector3Value>
 		& _CreateElement<"SpringConstraint", SpringConstraint>
 		& _CreateElement<"Fire", Fire>
 		& _CreateElement<"VideoPlayer", VideoPlayer>
-		& _CreateElement<"Shirt", Shirt>
-		& _CreateElement<"VideoDisplay", VideoDisplay>
-		& _CreateElement<"SoundGroup", SoundGroup>
+		& _CreateElement<"PrismaticConstraint", SlidingBallConstraint>
 		& _CreateElement<"EulerRotationCurve", EulerRotationCurve>
+		& _CreateElement<"SoundGroup", SoundGroup>
+		& _CreateElement<"AudioChannelMixer", AudioChannelMixer>
 		& _CreateElement<"RelativeGui", GuiObject>
-		& _CreateElement<"UIDragDetector", UIDragDetector>
 		& _CreateElement<"Path2D", Path2D>
 		& _CreateElement<"Explosion", Explosion>
+		& _CreateElement<"BlockMesh", DataModelMesh>
 		& _CreateElement<"ConeHandleAdornment", ConeHandleAdornment>
 		& _CreateElement<"TremoloSoundEffect", TremoloSoundEffect>
-		& _CreateElement<"UISizeConstraint", UISizeConstraint>
+		& _CreateElement<"Bone", Bone>
 		& _CreateElement<"Handles", Handles>
-		& _CreateElement<"StyleLink", StyleLink>
+		& _CreateElement<"ParticleEmitter", ParticleEmitter>
 		& _CreateElement<"BoolValue", BoolValue>
 		& _CreateElement<"AudioAnalyzer", AudioAnalyzer>
 		& _CreateElement<"Pose", Pose>
+		& _CreateElement<"Tool", Tool>
+		& _CreateElement<"StyleLink", StyleLink>
 		& _CreateElement<"SurfaceAppearance", SurfaceAppearance>
-		& _CreateElement<"AudioPitchShifter", AudioPitchShifter>
-		& _CreateElement<"Decal", Decal>
 		& _CreateElement<"ClickDetector", ClickDetector>
 		& _CreateElement<"LinearVelocity", LinearVelocity>
 		& _CreateElement<"UICorner", UICorner>
 		& _CreateElement<"AlignPosition", AlignPosition>
-		& _CreateElement<"AtmosphereSensor" | "FluidForceSensor", SensorBase & any>
+		& _CreateElement<"ColorCorrectionEffect", ColorCorrectionEffect>
 		& _CreateElement<"HingeConstraint", HingeConstraint>
 		& _CreateElement<"SurfaceLight", SurfaceLight>
 		& _CreateElement<"IKControl", IKControl>
 		& _CreateElement<"UIGradient", UIGradient>
-		& _CreateElement<"ImageButton", ImageButton>
+		& _CreateElement<"StyleDerive", StyleDerive>
 		& _CreateElement<"PathfindingLink", PathfindingLink>
 		& _CreateElement<"BoxHandleAdornment", BoxHandleAdornment>
 		& _CreateElement<"ScrollingFrame", ScrollingFrame>
 		& _CreateElement<"Keyframe", Keyframe>
-		& _CreateElement<"Vector3Curve" | "GuiMain" | "HumanoidController" | "ReflectionMetadataClasses" | "Hole" | "WorkspaceAnnotation" | "CSGDictionaryService" | "BindableEvent" | "SelectionPartLasso" | "RTAnimationTracker" | "HumanoidDescription" | "OperationGraph" | "BodyGyro" | "WrapLayer" | "FlagStand" | "PartOperationAsset" | "SkateboardController" | "BindableFunction" | "ReflectionMetadataCallbacks" | "Plane" | "FaceControls" | "InternalSyncItem" | "ExplorerFilter" | "Glue" | "ManualWeld" | "Hat" | "WrapTarget" | "CustomLog" | "Humanoid" | "Configuration" | "StyleSheet" | "SelectionPointLasso" | "HopperBin" | "FlyweightService" | "MotorFeature" | "DataStoreSetOptions" | "ReflectionMetadataYieldFunctions" | "AirController" | "VehicleController" | "Dragger" | "HeightmapImporterService" | "ManualGlue" | "AnimationRigData" | "Backpack" | "ClimbController" | "WrapDeformer" | "FloatCurve" | "RotationCurve" | "ProximityPromptService" | "CylinderMesh" | "VisualizationMode" | "RemoteEvent" | "PluginCapabilities" | "BodyPartDescription" | "DoubleConstrainedValue" | "IntConstrainedValue" | "BinaryStringValue" | "RocketPropulsion" | "Breakpoint" | "FunctionalTest" | "ReflectionMetadataEvents" | "TrackerStreamAnimation" | "VirtualInputManager" | "SkateboardPlatform" | "DataStoreGetOptions" | "NonReplicatedCSGDictionaryService" | "TextChannel" | "TerrainRegion" | "AdPortal" | "VisualizationModeCategory" | "ExperienceInviteOptions" | "ReflectionMetadata" | "FloorWire" | "StudioCallout" | "TestService" | "StarterGear" | "StandalonePluginScripts" | "Message" | "RotateP" | "AnimationController" | "Skin" | "RemoteFunction" | "ReflectionMetadataProperties" | "ReflectionMetadataFunctions" | "ReflectionMetadataEnums" | "Snap" | "BodyAngularVelocity" | "Annotation" | "TeleportOptions" | "GroundController" | "PluginAction" | "BodyForce" | "MarkerCurve" | "SwimController" | "AccessoryDescription" | "DataStoreIncrementOptions" | "BodyPosition" | "UnreliableRemoteEvent" | "Noise" | "BodyVelocity" | "Hint" | "Flag" | "BodyThrust" | "AdvancedDragger" | "Folder" | "AuroraScript" | "CustomEventReceiver" | "MemoryStoreService" | "CustomEvent" | "HiddenSurfaceRemovalAsset" | "Tween" | "Rotate" | "DataStoreOptions" | "RotateV" | string, Instance & any>
+		& _CreateElement<"Vector3Curve" | "GuiMain" | "HumanoidController" | "ReflectionMetadataClasses" | "AccessoryDescription" | "Hole" | "WorkspaceAnnotation" | "CSGDictionaryService" | "BindableEvent" | "SelectionPartLasso" | "RTAnimationTracker" | "HumanoidDescription" | "BodyThrust" | "OperationGraph" | "BodyGyro" | "WrapLayer" | "Folder" | "FlagStand" | "PartOperationAsset" | "SkateboardController" | "BindableFunction" | "ReflectionMetadataCallbacks" | "Plane" | "FaceControls" | "CustomEvent" | "InternalSyncItem" | "ExplorerFilter" | "Glue" | "ManualWeld" | "Hat" | "WrapTarget" | "CustomLog" | "Humanoid" | "Configuration" | "StyleSheet" | "SelectionPointLasso" | "HopperBin" | "FlyweightService" | "MotorFeature" | "DataStoreSetOptions" | "ReflectionMetadataYieldFunctions" | "AirController" | "VehicleController" | "HeightmapImporterService" | "ManualGlue" | "AnimationRigData" | "Backpack" | "ClimbController" | "WrapDeformer" | "FloatCurve" | "RotationCurve" | "ProximityPromptService" | "CylinderMesh" | "VisualizationMode" | "RemoteEvent" | "IntConstrainedValue" | "BinaryStringValue" | "BodyPartDescription" | "DoubleConstrainedValue" | "AdvancedDragger" | "RocketPropulsion" | "StarterGear" | "Breakpoint" | "FunctionalTest" | "TerrainRegion" | "TrackerStreamAnimation" | "ReflectionMetadataProperties" | "VirtualInputManager" | "PluginCapabilities" | "SkateboardPlatform" | "TextChannel" | "NonReplicatedCSGDictionaryService" | "AdPortal" | "VisualizationModeCategory" | "ExperienceInviteOptions" | "StudioCallout" | "FloorWire" | "StandalonePluginScripts" | "TestService" | "Message" | "ReflectionMetadataEnums" | "AnimationController" | "RemoteFunction" | "Skin" | "ReflectionMetadataFunctions" | "ReflectionMetadataEvents" | "ReflectionMetadata" | "Snap" | "BodyAngularVelocity" | "Annotation" | "TeleportOptions" | "PluginAction" | "GroundController" | "BodyForce" | "MarkerCurve" | "DataStoreIncrementOptions" | "BodyPosition" | "Noise" | "BodyVelocity" | "DataStoreGetOptions" | "Flag" | "AuroraScript" | "CustomEventReceiver" | "MemoryStoreService" | "HumanoidRigDescription" | "Hint" | "HiddenSurfaceRemovalAsset" | "Tween" | "Rotate" | "RotateV" | "RotateP" | "SwimController" | "DataStoreOptions" | "UnreliableRemoteEvent" | "Dragger" | string, Instance & any>
 	function ClearElements(self)
 	function GetCanvas(self): Frame
 
