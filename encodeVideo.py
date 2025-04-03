@@ -3,15 +3,18 @@ import numpy as np
 import math
 
 VIDEO_PATH = 'video.mp4'
-TARGET_WIDTH = 512
-TARGET_HEIGHT = 384
-TARGET_FPS = 30
+TARGET_WIDTH = 128
+TARGET_HEIGHT = 96
+TARGET_FPS = 5
 
 CHUNK_TYPES = {
-	"P-FRAME": b'\x00',
-	"I-FRAME": b'\x01'
+	"P-FRAME": b'\1',
+	"I-FRAME": b'\0'
 }
 
+def interleave_bytes(bytes: bytes, width: int) -> bytes:
+	rotated = np.frombuffer(bytes, dtype=np.uint8).reshape(-1, width)
+	return rotated.tobytes('F')
 
 def frameBitArray_to_chunkArray(frameBitArray: np.ndarray) -> np.ndarray:
 	height_p, width_p = frameBitArray.shape
@@ -36,10 +39,30 @@ def compare_chunkDiffFlatArray(l_chunkArray: np.ndarray, r_chunkArray: np.ndarra
 
 	return stacked_flatCoords
 
+def getMetadata(vidcap: cv2.VideoCapture) -> bytes:
+	return (b'BAC\x01'
+		+ TARGET_WIDTH.to_bytes(2, 'little')
+		+ TARGET_HEIGHT.to_bytes(2, 'little')
+		+ TARGET_FPS.to_bytes(2, 'little')
+		+ math.floor(vidcap.get(cv2.CAP_PROP_FRAME_COUNT) / vidcap.get(cv2.CAP_PROP_FPS) * TARGET_FPS).to_bytes(4, 'little')
+		+ b'\0\0')
 
+# [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][padding: 2 bytes][data: n bytes]
+# compression 02: interleaved
 
-def formatFileChunk(cType: bytes, data: bytes)-> bytes:
-	return cType + len(data).to_bytes(4, 'little') + data
+def makeFileChunk(cType: bytes, data: bytes)-> bytes:
+	compressed = data
+	compression = b'\0'
+
+	"""
+	if cType == CHUNK_TYPES['P-FRAME']:
+		compressed = interleave_bytes(data, 4)
+		compression = b'\2'
+	else:
+		compressed = data
+	#"""
+
+	return cType + compression + len(compressed).to_bytes(4, 'little') + b'\0\0' + compressed
 
 
 
@@ -71,16 +94,17 @@ while playhead_ms <= videoLength_ms and videoCap.isOpened():
 	chunkArray = frameBitArray_to_chunkArray(frameBitMatrix)
 
 	if last_frameChunks is None:
-		outputBuffer += formatFileChunk(CHUNK_TYPES['I-FRAME'], chunkArray.tobytes())
+		outputBuffer += makeFileChunk(CHUNK_TYPES['I-FRAME'], chunkArray.tobytes())
 	else:
-		outputBuffer += formatFileChunk(CHUNK_TYPES['P-FRAME'], compare_chunkDiffFlatArray(last_frameChunks, chunkArray).tobytes())
+		outputBuffer += makeFileChunk(CHUNK_TYPES['P-FRAME'], compare_chunkDiffFlatArray(last_frameChunks, chunkArray).tobytes())
 
 	last_frameChunks = chunkArray
 	
 	if (playhead_ms - _lastOutput) > 1000:
 		print(playhead_ms)
 		_lastOutput = playhead_ms
-	
+
+
 
 with open('bad_apple.bac1', 'wb') as f:
-    f.write(outputBuffer)
+    f.write(getMetadata(videoCap) + outputBuffer)
