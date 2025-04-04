@@ -47,18 +47,25 @@ def getMetadata(vidcap: cv2.VideoCapture) -> bytes:
 		+ math.floor(vidcap.get(cv2.CAP_PROP_FRAME_COUNT) / vidcap.get(cv2.CAP_PROP_FPS) * TARGET_FPS).to_bytes(4, 'little')
 		+ b'\0\0')
 
-# [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][padding: 2 bytes][data: n bytes]
+# [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][frame_id: 2 bytes][data: n bytes]
 
-def makeFileChunk(cType: bytes, data: bytes)-> bytes:
+def makeFileChunk(cType: bytes, id: int, data: bytes)-> bytes:
 	compression = b'\0'
 
-	width = 2
-	if cType == CHUNK_TYPES['P-FRAME']:
-		width = 4
+	width = None
+	match cType:
+		case b'\0':
+			width = 2
+		case b'\1':
+			wifth = 4
 
 	interleaved = interleave_bytes(data, width)
 
-	return cType + compression + len(interleaved).to_bytes(4, 'little') + b'\0\0' + interleaved
+	return (cType
+		+ compression 
+		+ len(interleaved).to_bytes(4, 'little') 
+		+ id.to_bytes(2, 'little') 
+		+ interleaved)
 
 
 
@@ -70,6 +77,7 @@ videoLength_ms = math.ceil(frameCount/fps*1000)
 
 outputBuffer = bytearray()
 last_frameChunks = None
+last_frameId = 1
 
 _lastOutput = 0
 
@@ -90,11 +98,13 @@ while playhead_ms <= videoLength_ms and videoCap.isOpened():
 	chunkArray = frameBitArray_to_chunkArray(frameBitMatrix)
 
 	if last_frameChunks is None:
-		outputBuffer += makeFileChunk(CHUNK_TYPES['I-FRAME'], chunkArray.tobytes())
+		outputBuffer += makeFileChunk(CHUNK_TYPES['I-FRAME'], last_frameId, chunkArray.tobytes())
 	else:
-		outputBuffer += makeFileChunk(CHUNK_TYPES['P-FRAME'], compare_chunkDiffFlatArray(last_frameChunks, chunkArray).tobytes())
+		outputBuffer += makeFileChunk(CHUNK_TYPES['P-FRAME'], last_frameId,
+			compare_chunkDiffFlatArray(last_frameChunks, chunkArray).tobytes())
 
 	last_frameChunks = chunkArray
+	last_frameId = last_frameId + 1
 	
 	if (playhead_ms - _lastOutput) > 1000:
 		print(playhead_ms)
@@ -103,4 +113,4 @@ while playhead_ms <= videoLength_ms and videoCap.isOpened():
 
 
 with open('bad_apple.bac1', 'wb') as f:
-    f.write(getMetadata(videoCap) + outputBuffer)
+    f.write(getMetadata(videoCap) + outputBuffer + b'\x7f\0\0\0\0\0\0\0')

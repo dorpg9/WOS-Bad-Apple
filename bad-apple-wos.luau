@@ -1,10 +1,20 @@
 --!strict
 
-local repr = require("repr")
+local BAC1_URL = ""
+local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
-
-type IFrame = {type: 'I', chunks: {{number}}}
-type PFrame = {type: 'P', chunks: {{p: Vector2, s: number}}}
+type IFrame = {
+	type: 'I', 
+	id: number,
+	count: number,
+	chunks: {{number}}
+}
+type PFrame = {
+	type: 'P', 
+	id: number,
+	count: number,
+	chunks: {{p: Vector2, s: number}}
+}
 
 type BAC1Metadata = {
 	width_in_chunks: number;
@@ -18,7 +28,19 @@ local CHUNK_TYPES: {'I'|'P'} = {
 	[1] = 'P';
 }
 
--- [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][padding: 2 bytes][data: n bytes]
+
+local function get_BAC1(): string
+	if IN_GAME then
+		local modem = assert(GetPartFromPort(1, 'Modem'), 'missing modem on port 1')
+		return modem:GetAsync(BAC1_URL, true)
+	else
+		return game:GetService("HttpService"):GetAsync(BAC1_URL, true)
+	end
+end
+
+
+
+-- [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][id: 2 bytes][data: n bytes]
 local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number, IFrame|PFrame)
 	local frameType: 'I'|'P' = CHUNK_TYPES[buffer.readu8(b, o)]
 
@@ -26,6 +48,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 
 	-- local compression = buffer.readu8(b, o + 1)
 	local dataLength = buffer.readu32(b, o + 2)
+	local frameId = buffer.readu16(b, o + 6)
 	local interleavedData = buffer.readstring(b, o + 8, dataLength)
 
 	local interleaveWidth = frameType == 'I' and 2 or 4
@@ -51,7 +74,12 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 			end
 		end
 
-		return o + 8 + dataLength, {type = 'I', chunks = chunks}
+		return o + 8 + dataLength, {
+			type = 'I', 
+			id = frameId, 
+			count = chunkCount,
+			chunks = chunks
+		}
 	else
 		local chunks: {{p: Vector2, s: number}} = {}
 
@@ -60,6 +88,41 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 			chunks[#chunks + 1] = {p = Vector2.new(cX, cY), s = chunk}
 		end
 
-		return o + 8 + dataLength, {type = 'P', chunks = chunks}
+		return o + 8 + dataLength, {
+			type = 'P', 
+			id = frameId, 
+			count = chunkCount,
+			chunks = chunks
+		}
 	end
 end
+
+local function readMetadata(b: buffer, o: number): (number, BAC1Metadata)
+	assert(buffer.readstring(b, o, 4) == "BAC\1")
+
+	return o + 16, {
+		width_in_chunks = buffer.readu16(b, o + 4);
+		height_in_chunks = buffer.readu16(b, o + 6);
+		fps = buffer.readu16(b, o + 8);
+		frame_count = buffer.readu32(b, o + 10);
+	}
+end
+
+local function readFile(file: string): (BAC1Metadata, {IFrame | PFrame})
+	local b, o = buffer.fromstring(file), 0
+
+	local metadata
+	o, metadata = readMetadata(b, o)
+
+	local frames: {IFrame | PFrame} = {}
+
+	while buffer.readstring(b, o, 8) ~= "\x7f\0\0\0\0\0\0\0" do
+		local frame
+		o, frame = readFrame(b, o, metadata)
+		frames[frame.id] = frame
+	end
+
+	return metadata, frames
+end
+
+readFile(get_BAC1())
