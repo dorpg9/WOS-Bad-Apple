@@ -30,10 +30,14 @@ def frameBitArray_to_chunkArray(frameBitArray: np.ndarray) -> np.ndarray:
 
 def compare_chunkDiffFlatArray(l_chunkArray: np.ndarray, r_chunkArray: np.ndarray) -> np.ndarray:
 	hasDiff = l_chunkArray != r_chunkArray
+
+	mtxWidth: int = r_chunkArray.shape[1]
 	
 	# nonzero gets the indices of non zero elements as ([x0, x1, ...], [y0, y1, ...])
-	diff_flatCoords = np.nonzero(hasDiff.flatten())[0].astype(np.uint16)
-	chunk_flatCoords = r_chunkArray.flatten()[diff_flatCoords]
+	diff_flatId = np.nonzero(hasDiff.flatten())[0]
+	chunk_flatCoords = r_chunkArray.flatten()[diff_flatId]
+
+	diff_flatCoords = (diff_flatId%mtxWidth + 1 + 256*(diff_flatId//mtxWidth + 1)).astype(np.uint16)
 
 	stacked_flatCoords = np.stack((diff_flatCoords, chunk_flatCoords), axis=1)
 
@@ -52,12 +56,9 @@ def getMetadata(vidcap: cv2.VideoCapture) -> bytes:
 def makeFileChunk(cType: bytes, id: int, data: bytes)-> bytes:
 	compression = b'\0'
 
-	width = None
-	match cType:
-		case b'\0':
-			width = 2
-		case b'\1':
-			wifth = 4
+	width = 2
+	if cType == CHUNK_TYPES['P-FRAME']:
+		width = 4
 
 	interleaved = interleave_bytes(data, width)
 

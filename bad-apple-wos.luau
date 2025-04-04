@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = ""
+local BAC1_URL = "http://0x0.st/82R4.bac1"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 type IFrame = {
@@ -54,10 +54,13 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 	local interleaveWidth = frameType == 'I' and 2 or 4
 	local chunkCount = dataLength/interleaveWidth
 
+
 	local untangledData = table.create(chunkCount, "")
-	for i = 1, dataLength do
-		local si = (i//interleaveWidth)*chunkCount + i%interleaveWidth
-		untangledData[(i - 1)%interleaveWidth + 1] = interleavedData:sub(si, si)
+	for cI = 0, chunkCount - 1 do
+		for bI = 0, interleaveWidth - 1 do
+			local si = bI * chunkCount + cI + 1
+			untangledData[cI + 1] ..= interleavedData:sub(si, si)
+		end
 	end
 
 	if frameType == 'I' then
@@ -69,7 +72,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 		for cY = 1, metadata.height_in_chunks do
 			chunks[cY] = {}
 			for cX = 1, metadata.width_in_chunks do
-				local flatChunkI = (cY - 1) * metadata.height_in_chunks + cX
+				local flatChunkI = (cY - 1) * metadata.width_in_chunks + cX
 				chunks[cY][cX] = ("<I2"):unpack(untangledData[flatChunkI])
 			end
 		end
@@ -84,7 +87,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 		local chunks: {{p: Vector2, s: number}} = {}
 
 		for _, chunkData in next, untangledData do
-			local cY: number, cX: number, chunk: number = ("<I1I1I2"):unpack(chunkData)
+			local cX: number, cY: number, chunk: number = ("<I1I1I2"):unpack(chunkData)
 			chunks[#chunks + 1] = {p = Vector2.new(cX, cY), s = chunk}
 		end
 
