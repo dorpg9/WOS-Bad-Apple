@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = "http://0x0.st/82R4.bac1"
+local BAC1_URL = "http://0x0.st/82R7.bac1"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 type IFrame = {
@@ -14,6 +14,12 @@ type PFrame = {
 	id: number,
 	count: number,
 	chunks: {{p: Vector2, s: number}}
+}
+
+type CellRenderingInfo = {
+	t: number,
+	o: Vector2,
+	l: ImageLabel
 }
 
 type BAC1Metadata = {
@@ -38,6 +44,20 @@ local function get_BAC1(): string
 	end
 end
 
+local function get_canvas(): Frame
+	if IN_GAME then
+		local screen = assert(GetPartFromPort(1, 'Screen'), 'missing screen on port 1')
+		screen:ClearElements()
+		return screen:GetCanvas()
+	else
+		return (script :: any).Parent.SurfaceGui.Canvas
+	end
+end
+
+
+local function cellState_to_offset(s: number): (Vector2)
+	return Vector2.new(s%256 * 4, s//256 * 4)
+end
 
 
 -- [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][id: 2 bytes][data: n bytes]
@@ -125,7 +145,106 @@ local function readFile(file: string): (BAC1Metadata, {IFrame | PFrame})
 		frames[frame.id] = frame
 	end
 
+	table.sort(frames, function(l, r)
+		return l.id < r.id
+	end)
+
 	return metadata, frames
 end
 
-readFile(get_BAC1())
+local function initializeCells(metadata: BAC1Metadata, canvas: Frame): {{ImageLabel}}
+	local container = Instance.new('Frame')
+	container.Size = UDim2.fromOffset(metadata.width_in_chunks*4, metadata.height_in_chunks*4)
+	container.Position = UDim2.fromScale(0.5, 0.5)
+	container.AnchorPoint = Vector2.one * 0.5
+	container.Parent = canvas
+
+	local cellTemplate = Instance.new('ImageLabel')
+	cellTemplate.BackgroundColor3 = Color3.new()
+	cellTemplate.BorderSizePixel = 0
+	cellTemplate.Image = "rbxassetid://14750789446"
+	cellTemplate.ImageRectSize = Vector2.new(4, 4)
+	cellTemplate.ResampleMode = Enum.ResamplerMode.Pixelated
+	cellTemplate.Rotation = 180 -- I have no idea lol
+	cellTemplate.ScaleType = Enum.ScaleType.Stretch
+	cellTemplate.Size = UDim2.fromOffset(4, 4)
+
+	local cells: {{ImageLabel}} = {}
+	for cY = 1, metadata.height_in_chunks do
+		cells[cY] = {}
+		for cX = 1, metadata.width_in_chunks do
+			local cell = cellTemplate:Clone()
+			cells[cY][cX] = cell
+
+			cell.Position = UDim2.fromOffset((cX-1)*4, (cY-1)*4)
+			cell.Parent = container
+		end
+	end
+
+	return cells
+end
+
+local function convert_frames_to_rSortedCellInfo(
+	metadata: BAC1Metadata, 
+	frames: {IFrame|PFrame},
+	cells: {{ImageLabel}}): {CellRenderingInfo}
+
+	local cellInfos: {CellRenderingInfo} = {}
+	local cellInfo_n = 0
+
+	for _, frame in ipairs(frames) do
+		local playhead = frame.id/metadata.fps
+
+		if frame.type == 'I' then
+			for cY, row in next, frame.chunks do
+				for cX, cellState in next, row do
+					cellInfo_n = cellInfo_n + 1
+					cellInfos[cellInfo_n] = {
+						t = playhead,
+						o = cellState_to_offset(cellState),
+						l = cells[cY][cX]
+					}
+				end
+			end
+		elseif frame.type == 'P' then
+			for _, chunk in next, frame.chunks do
+				cellInfo_n = cellInfo_n + 1
+				cellInfos[cellInfo_n] = {
+					t = playhead,
+					o = cellState_to_offset(chunk.s),
+					l = cells[chunk.p.Y][chunk.p.X]
+				}
+			end
+		end
+	end
+
+	table.sort(cellInfos, function(l, r)
+		return l.t > l.t
+	end)
+
+	return cellInfos
+end
+
+local function render(info: CellRenderingInfo, t1: number)
+	task.wait(t1 - os.clock() + info.t)
+	info.l.ImageRectOffset = info.o
+end
+
+local function deferRender(info: CellRenderingInfo, t1: number) task.spawn(render, info, t1) end
+
+local metadata, frames = readFile(get_BAC1())
+local cells = initializeCells(metadata, get_canvas())
+local cellInfos = convert_frames_to_rSortedCellInfo(metadata, frames, cells)
+
+local syncEnd = os.clock() + 10
+print("synchronizing, window " .. syncEnd - os.clock())
+
+for i , cellInfo in ipairs(cellInfos) do
+	deferRender(cellInfo, syncEnd)
+	if i%1000 == 0 then 
+		print(("%8.4f %6i"):format(os.clock(), i)) 
+		task.wait()
+	end
+end
+
+print("synchronize end")

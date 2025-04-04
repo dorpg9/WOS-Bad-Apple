@@ -34,12 +34,12 @@ def compare_chunkDiffFlatArray(l_chunkArray: np.ndarray, r_chunkArray: np.ndarra
 	mtxWidth: int = r_chunkArray.shape[1]
 	
 	# nonzero gets the indices of non zero elements as ([x0, x1, ...], [y0, y1, ...])
-	diff_flatId = np.nonzero(hasDiff.flatten())[0]
-	chunk_flatCoords = r_chunkArray.flatten()[diff_flatId]
+	diff_flatId = np.nonzero(hasDiff.flatten())[0].astype(np.uint32)
+	chunk_flatCoords = r_chunkArray.flatten()[diff_flatId].astype(np.uint16)
 
 	diff_flatCoords = (diff_flatId%mtxWidth + 1 + 256*(diff_flatId//mtxWidth + 1)).astype(np.uint16)
 
-	stacked_flatCoords = np.stack((diff_flatCoords, chunk_flatCoords), axis=1)
+	stacked_flatCoords = np.stack((diff_flatCoords, chunk_flatCoords), axis=1).astype(np.uint16)
 
 	return stacked_flatCoords
 
