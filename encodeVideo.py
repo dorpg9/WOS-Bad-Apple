@@ -3,9 +3,9 @@ import numpy as np
 import math
 
 VIDEO_PATH = 'video.mp4'
-TARGET_WIDTH = 128
-TARGET_HEIGHT = 96
-TARGET_FPS = 5
+TARGET_WIDTH = 512
+TARGET_HEIGHT = 384
+TARGET_FPS = 30
 
 CHUNK_TYPES = {
 	"P-FRAME": b'\1',

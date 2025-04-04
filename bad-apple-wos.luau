@@ -38,9 +38,14 @@ local CHUNK_TYPES: {'I'|'P'} = {
 local function get_BAC1(): string
 	if IN_GAME then
 		local modem = assert(GetPartFromPort(1, 'Modem'), 'missing modem on port 1')
-		return modem:GetAsync(BAC1_URL, true)
+		local s = modem:GetAsync(BAC1_URL, true)
+		if s:match("^{") then return buffer.tostring((JSONDecode :: any)(s)) end
+		return s
 	else
-		return game:GetService("HttpService"):GetAsync(BAC1_URL, true)
+		local HttpService = game:GetService("HttpService")
+		local s = HttpService:GetAsync(BAC1_URL, true)
+		if s:match("^{") then return buffer.tostring(HttpService:JSONDecode(s)) end
+		return s
 	end
 end
 
@@ -154,6 +159,8 @@ end
 
 local function initializeCells(metadata: BAC1Metadata, canvas: Frame): {{ImageLabel}}
 	local container = Instance.new('Frame')
+	container.BorderSizePixel = 0
+	container.BackgroundTransparency = 1
 	container.Size = UDim2.fromOffset(metadata.width_in_chunks*4, metadata.height_in_chunks*4)
 	container.Position = UDim2.fromScale(0.5, 0.5)
 	container.AnchorPoint = Vector2.one * 0.5
@@ -236,13 +243,13 @@ local metadata, frames = readFile(get_BAC1())
 local cells = initializeCells(metadata, get_canvas())
 local cellInfos = convert_frames_to_rSortedCellInfo(metadata, frames, cells)
 
-local syncEnd = os.clock() + 10
+local syncEnd = os.clock() + 15
 print("synchronizing, window " .. syncEnd - os.clock())
 
 for i , cellInfo in ipairs(cellInfos) do
 	deferRender(cellInfo, syncEnd)
-	if i%1000 == 0 then 
-		print(("%8.4f %6i"):format(os.clock(), i)) 
+	if i%5000 == 0 then 
+		print(("%8.4f %6i"):format(syncEnd - os.clock(), i)) 
 		task.wait()
 	end
 end
