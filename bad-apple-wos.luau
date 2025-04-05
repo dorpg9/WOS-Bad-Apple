@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = "http://0x0.st/82R7.bac1"
+local BAC1_URL = "http://0x0.st/82Fq.zjson"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 type IFrame = {
@@ -17,7 +17,6 @@ type PFrame = {
 }
 
 type CellRenderingInfo = {
-	t: number,
 	o: Vector2,
 	l: ImageLabel
 }
@@ -29,27 +28,51 @@ type BAC1Metadata = {
 	frame_count: number;
 }
 
-local CHUNK_TYPES: {'I'|'P'} = {
-	[0] = 'I';
-	[1] = 'P';
-}
+local runWithWorkers: 
+	(("readFrame", buffer, number, BAC1Metadata) -> (number, IFrame | PFrame))
+	& (("renderFromInfo", {CellRenderingInfo}) -> ())
+	& (("parent", Instance, Instance) -> ())
+	& (("clone", Instance) -> (Instance))
+	& (("buildCellInfo", BAC1Metadata, IFrame | PFrame, {{ImageLabel}}, number) -> ({{CellRenderingInfo}}))
+local workerCount: number
 
+do
+	local workerMicros = GetPartsFromPort(65536, 'Microcontroller')
+	for i, v in next, workerMicros do
+		if v == Microcontroller then
+			table.remove(workerMicros, i)
+		end
+	end
 
-local function get_BAC1(): string
+	workerCount = #workerMicros
+
+	local freeWorkerI = 1
+	function runWithWorkers(op, ...)
+		workerMicros[freeWorkerI]:Send(op, ...)
+		freeWorkerI += 1
+		if freeWorkerI > #workerMicros then
+			freeWorkerI = 1
+		end
+
+		return select(2, Microcontroller:Receive())
+	end
+end
+
+local function get_BAC1(): (string)
 	if IN_GAME then
 		local modem = assert(GetPartFromPort(1, 'Modem'), 'missing modem on port 1')
-		local s = modem:GetAsync(BAC1_URL, true)
+		local s = modem:GetAsync(BAC1_URL, false)
 		if s:match("^{") then return buffer.tostring((JSONDecode :: any)(s)) end
 		return s
 	else
 		local HttpService = game:GetService("HttpService")
-		local s = HttpService:GetAsync(BAC1_URL, true)
+		local s = HttpService:GetAsync(BAC1_URL, false)
 		if s:match("^{") then return buffer.tostring(HttpService:JSONDecode(s)) end
 		return s
 	end
 end
 
-local function get_canvas(): Frame
+local function get_canvas(): (Frame)
 	if IN_GAME then
 		local screen = assert(GetPartFromPort(1, 'Screen'), 'missing screen on port 1')
 		screen:ClearElements()
@@ -60,16 +83,17 @@ local function get_canvas(): Frame
 end
 
 
-local function cellState_to_offset(s: number): (Vector2)
-	return Vector2.new(s%256 * 4, s//256 * 4)
-end
-
-
 -- [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][id: 2 bytes][data: n bytes]
+--[[
+local CHUNK_TYPES: {'I'|'P'} = {
+	[0] = 'I';
+	[1] = 'P';
+}
+
 local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number, IFrame|PFrame)
 	local frameType: 'I'|'P' = CHUNK_TYPES[buffer.readu8(b, o)]
 
-	assert(frameType, ("unknown frameType %i"):format(buffer.readu8(b, o)))
+	assert(frameType, ("unknown frameType %i at %i"):format(buffer.readu8(b, o), o))
 
 	-- local compression = buffer.readu8(b, o + 1)
 	local dataLength = buffer.readu32(b, o + 2)
@@ -124,6 +148,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 		}
 	end
 end
+--]]
 
 local function readMetadata(b: buffer, o: number): (number, BAC1Metadata)
 	assert(buffer.readstring(b, o, 4) == "BAC\1")
@@ -145,9 +170,10 @@ local function readFile(file: string): (BAC1Metadata, {IFrame | PFrame})
 	local frames: {IFrame | PFrame} = {}
 
 	while buffer.readstring(b, o, 8) ~= "\x7f\0\0\0\0\0\0\0" do
-		local frame
-		o, frame = readFrame(b, o, metadata)
+		local frame	
+		o, frame = runWithWorkers("readFrame", b, o, metadata)
 		frames[frame.id] = frame
+		if frame.id%10 == 0 then print(frame.id) end
 	end
 
 	table.sort(frames, function(l, r)
@@ -157,10 +183,11 @@ local function readFile(file: string): (BAC1Metadata, {IFrame | PFrame})
 	return metadata, frames
 end
 
-local function initializeCells(metadata: BAC1Metadata, canvas: Frame): {{ImageLabel}}
+local function initializeCells(metadata: BAC1Metadata, canvas: Frame): ({{ImageLabel}})
 	local container = Instance.new('Frame')
 	container.BorderSizePixel = 0
-	container.BackgroundTransparency = 1
+	container.BackgroundTransparency = 0
+	container.BackgroundColor3 = Color3.new(0.04, 0.04, 0.06)
 	container.Size = UDim2.fromOffset(metadata.width_in_chunks*4, metadata.height_in_chunks*4)
 	container.Position = UDim2.fromScale(0.5, 0.5)
 	container.AnchorPoint = Vector2.one * 0.5
@@ -180,72 +207,43 @@ local function initializeCells(metadata: BAC1Metadata, canvas: Frame): {{ImageLa
 	for cY = 1, metadata.height_in_chunks do
 		cells[cY] = {}
 		for cX = 1, metadata.width_in_chunks do
-			local cell = cellTemplate:Clone()
+			local cell: ImageLabel = runWithWorkers('clone', cellTemplate) :: any
 			cells[cY][cX] = cell
 
 			cell.Position = UDim2.fromOffset((cX-1)*4, (cY-1)*4)
-			cell.Parent = container
+			runWithWorkers("parent", container, cell)
 		end
 	end
 
 	return cells
 end
 
-local function convert_frames_to_rSortedCellInfo(
-	metadata: BAC1Metadata, 
-	frames: {IFrame|PFrame},
-	cells: {{ImageLabel}}): {CellRenderingInfo}
+local function play_frame(distributedInfos: {{CellRenderingInfo}}): ()
 
-	local cellInfos: {CellRenderingInfo} = {}
-	local cellInfo_n = 0
-
-	for _, frame in ipairs(frames) do
-		local playhead = frame.id/metadata.fps
-
-		if frame.type == 'I' then
-			for cY, row in next, frame.chunks do
-				for cX, cellState in next, row do
-					cellInfo_n = cellInfo_n + 1
-					cellInfos[cellInfo_n] = {
-						t = playhead,
-						o = cellState_to_offset(cellState),
-						l = cells[cY][cX]
-					}
-				end
-			end
-		elseif frame.type == 'P' then
-			for _, chunk in next, frame.chunks do
-				cellInfo_n = cellInfo_n + 1
-				cellInfos[cellInfo_n] = {
-					t = playhead,
-					o = cellState_to_offset(chunk.s),
-					l = cells[chunk.p.Y][chunk.p.X]
-				}
-			end
-		end
+	for i, infoSet in next, distributedInfos do
+		-- print("distributing instruction to micro #" .. i)
+		runWithWorkers("renderFromInfo", infoSet)		
 	end
-
-	table.sort(cellInfos, function(l, r)
-		return l.t > l.t
-	end)
-
-	return cellInfos
 end
-
-local function render(info: CellRenderingInfo, t1: number)
-	task.wait(t1 - os.clock() + info.t)
-	info.l.ImageRectOffset = info.o
-end
-
-local function deferRender(info: CellRenderingInfo, t1: number) task.spawn(render, info, t1) end
 
 local metadata, frames = readFile(get_BAC1())
 local cells = initializeCells(metadata, get_canvas())
-local cellInfos = convert_frames_to_rSortedCellInfo(metadata, frames, cells)
 
-local syncEnd = os.clock() + 15
-print("synchronizing, window " .. syncEnd - os.clock())
+local syncEnd = os.clock() + 30
 
+print(`deferring render with window {syncEnd - os.clock()}`)
+for i, frame in next, frames do
+	local timestamp = frame.id / metadata.fps
+
+	local cellInfo = runWithWorkers("buildCellInfo", metadata, frame, cells, workerCount)
+	task.delay(syncEnd - os.clock() + timestamp, play_frame, cellInfo)
+
+	if i%10 == 0 then 
+		print(("deferring render of frame %i"):format(frame.id))
+	end
+end
+
+--[[
 for i , cellInfo in ipairs(cellInfos) do
 	deferRender(cellInfo, syncEnd)
 	if i%5000 == 0 then 
@@ -253,5 +251,4 @@ for i , cellInfo in ipairs(cellInfos) do
 		task.wait()
 	end
 end
-
-print("synchronize end")
+--]]
