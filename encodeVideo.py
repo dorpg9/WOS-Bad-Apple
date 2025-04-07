@@ -1,11 +1,12 @@
 import cv2
 import numpy as np
+from numba import jit
 import math
 
 VIDEO_PATH = 'video.mp4'
-TARGET_WIDTH = 128
-TARGET_HEIGHT = 96
-TARGET_FPS = 5
+TARGET_WIDTH = 512
+TARGET_HEIGHT = 384
+TARGET_FPS = 30
 
 CHUNK_TYPES = {
 	"P-FRAME": b'\1',
@@ -68,6 +69,20 @@ def makeFileChunk(cType: bytes, id: int, data: bytes)-> bytes:
 		+ id.to_bytes(2, 'little') 
 		+ interleaved)
 
+@jit
+def dither(image):
+    ret = (image > 127) * 255
+    qError = image - ret
+    height, width = ret.shape
+
+    for y in range(0, height-1):
+        for x in range(1, width-1):
+            ret[y][x+1] = 	ret[y][x+1] + 	(qError[y][x] 		* 7/16)
+            ret[y+1][x-1] = ret[y+1][x-1] + (qError[y+1][x-1] 	* 3/16)
+            ret[y+1][x] = 	ret[y+1][x]+ 	(qError[y+1][x] 	* 5/16)
+            ret[y+1][x+1] = ret[y+1][x+1] + (qError[y+1][x-1] 	* 1/16)
+
+    return (ret > 127)
 
 
 videoCap = cv2.VideoCapture(VIDEO_PATH)
@@ -92,8 +107,8 @@ while playhead_ms <= videoLength_ms and videoCap.isOpened():
 	if not frameRead: break
 	frame = cv2.resize(frame, (TARGET_WIDTH, TARGET_HEIGHT), interpolation=cv2.INTER_NEAREST)
 
-	(_, binaryFrame) = cv2.threshold(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 127, 255, cv2.THRESH_BINARY)
-	boolFrame = (binaryFrame > 0)
+	binaryFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	boolFrame = dither(binaryFrame)
 
 	frameBitMatrix = np.array(boolFrame, np.uint8)
 	chunkArray = frameBitArray_to_chunkArray(frameBitMatrix)

@@ -6,3 +6,4 @@
 
 *.bac1
 *.zjson
+!zout/*.zjson
