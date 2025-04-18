@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = "https://github.com/dorpg9/WOS-Bad-Apple/raw/refs/heads/ver-2025-01/zout/ba-fullres-dither.zjson"
+local BAC1_URL = "https://github.com/dorpg9/WOS-Bad-Apple/raw/refs/heads/ver-2025-01/zout/nodither2.zjson"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 type IFrame = {
@@ -173,7 +173,7 @@ local function getProgressUpdater(canvas: Frame)
 		print(("%16s %6.4f"):format(tag, progress))
 		if tag == "decode" then
 			bar1.Size = UDim2.new(progress, 0, 0, 8)
-		elseif tag == "deferRenedr" then
+		elseif tag == "deferRender" then
 			bar2.Size = UDim2.new(progress, 0, 0, 8)
 		end
 	end
@@ -261,19 +261,25 @@ local progressHandler = getProgressUpdater(canvas)
 local metadata, frames = readFile(get_BAC1(), progressHandler)
 local cells = initializeCells(metadata, get_canvas())
 
-local syncEnd = os.clock() + 30
+local toSchedule: {{t: number, c: {{CellRenderingInfo}}}} = {}
 
-print(`deferring render with window {syncEnd - os.clock()}`)
+print(`baking render`)
 for i, frame in next, frames do
 	local timestamp = frame.id / metadata.fps
 
 	local cellInfo = runWithWorkers("buildCellInfo", metadata, frame, cells, workerCount)
-	task.delay(syncEnd - os.clock() + timestamp, play_frame, cellInfo)
+	toSchedule[#toSchedule + 1] = {t = timestamp, c = cellInfo}
 
 	if i%10 == 0 then 
 		progressHandler("deferRender", frame.id/metadata.frame_count)
 	end
 end
+
+local syncT1 = os.clock() + 5
+for _, bakedFrame in next, toSchedule do
+	task.delay((syncT1 - os.clock()) + bakedFrame.t, play_frame, bakedFrame.c)
+end
+
 
 --[[
 for i , cellInfo in ipairs(cellInfos) do

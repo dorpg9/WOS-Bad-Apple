@@ -36,31 +36,39 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 	local compression = buffer.readu8(b, o + 1)
 	local dataLength = buffer.readu32(b, o + 2)
 	local frameId = buffer.readu16(b, o + 6)
-	local interleavedData = buffer.readstring(b, o + 8, dataLength)
+	local unresolvedData = buffer.readstring(b, o + 8, dataLength)
 
-	local interleaveWidth = frameType == 'I' and 2 or 4
-	local chunkCount = dataLength/interleaveWidth
+	local sizeof_chunk = frameType == 'I' and 2 or 4
+	local chunkCount = dataLength/sizeof_chunk
 
-	
-		local untangledData = table.create(chunkCount, "")
+	local untangledData: buffer
+	if compression == '\x10' then
+		local deInterleaved = table.create(chunkCount, "")
 		for cI = 0, chunkCount - 1 do
-			for bI = 0, interleaveWidth - 1 do
+			for bI = 0, sizeof_chunk - 1 do
 				local si = bI * chunkCount + cI + 1
-				untangledData[cI + 1] ..= interleavedData:sub(si, si)
+				deInterleaved[cI + 1] ..= unresolvedData:sub(si, si)
 			end
 		end
+
+		untangledData = buffer.fromstring(table.concat(deInterleaved))
+	else
+		untangledData = buffer.fromstring(unresolvedData)
+	end
 
 	if frameType == 'I' then
 		local chunks: {{number}} = {}
 
 		assert(metadata.height_in_chunks*metadata.width_in_chunks == chunkCount,
 			("I-Frame chunk count mismatch, read %i"):format(chunkCount))
+
+		
 		
 		for cY = 1, metadata.height_in_chunks do
 			chunks[cY] = {}
 			for cX = 1, metadata.width_in_chunks do
 				local flatChunkI = (cY - 1) * metadata.width_in_chunks + cX
-				chunks[cY][cX] = ("<I2"):unpack(untangledData[flatChunkI])
+				chunks[cY][cX] = buffer.readu16(unresolvedData, (flatChunkI - 1)*2)
 			end
 		end
 
@@ -73,8 +81,12 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 	else
 		local chunks: {{p: Vector2, s: number}} = {}
 
-		for _, chunkData in next, untangledData do
-			local cX: number, cY: number, chunk: number = ("<I1I1I2"):unpack(chunkData)
+		for chunkI = 1, chunkCount do
+			local cX: number, cY: number, chunk: number = 
+				buffer.readu8(untangledData, (chunkI - 1)*4),
+				buffer.readu8(untangledData, (chunkI - 1)*4 + 1),
+				buffer.readu16(untangledData, (chunkI - 1)*4 + 2)
+			
 			chunks[#chunks + 1] = {p = Vector2.new(cX, cY), s = chunk}
 		end
 
