@@ -3,6 +3,9 @@
 local BAC1_URL = "https://github.com/dorpg9/WOS-Bad-Apple/raw/refs/heads/ver-2025-01/zout/nodither2.zjson"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
+-- \):\s*[^\w_].*?\n
+-- )\n
+
 type IFrame = {
 	type: 'I', 
 	id: number,

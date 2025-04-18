@@ -68,7 +68,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 			chunks[cY] = {}
 			for cX = 1, metadata.width_in_chunks do
 				local flatChunkI = (cY - 1) * metadata.width_in_chunks + cX
-				chunks[cY][cX] = buffer.readu16(unresolvedData, (flatChunkI - 1)*2)
+				chunks[cY][cX] = buffer.readu16(untangledData, (flatChunkI - 1)*2)
 			end
 		end
 
