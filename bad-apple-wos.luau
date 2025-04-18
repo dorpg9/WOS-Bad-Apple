@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = "http://0x0.st/82Fq.zjson"
+local BAC1_URL = "https://github.com/dorpg9/WOS-Bad-Apple/raw/refs/heads/ver-2025-01/zout/ba-fullres-dither.zjson"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 type IFrame = {
@@ -150,6 +150,35 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number,
 end
 --]]
 
+local function getProgressUpdater(canvas: Frame)
+	local bar = Instance.new("Frame")
+	bar.Size = UDim2.new(0, 0, 0, 0)
+	bar.ZIndex = 100
+	
+	local bar1 = bar:Clone()
+	local bar2 = bar:Clone()
+	
+	bar1.Parent = canvas
+	bar2.Parent = canvas
+	
+	bar2.Position = UDim2.fromOffset(0, 8)
+
+	return function(tag: string, progress: number)
+		if tag == "done" then
+			bar1:Destroy()
+			bar2:Destroy()
+			return
+		end
+		
+		print(("%16s %6.4f"):format(tag, progress))
+		if tag == "decode" then
+			bar1.Size = UDim2.new(progress, 0, 0, 8)
+		elseif tag == "deferRenedr" then
+			bar2.Size = UDim2.new(progress, 0, 0, 8)
+		end
+	end
+end
+
 local function readMetadata(b: buffer, o: number): (number, BAC1Metadata)
 	assert(buffer.readstring(b, o, 4) == "BAC\1")
 
@@ -161,7 +190,7 @@ local function readMetadata(b: buffer, o: number): (number, BAC1Metadata)
 	}
 end
 
-local function readFile(file: string): (BAC1Metadata, {IFrame | PFrame})
+local function readFile(file: string, progressHandler: (string, number)->()): (BAC1Metadata, {IFrame | PFrame})
 	local b, o = buffer.fromstring(file), 0
 
 	local metadata
@@ -173,7 +202,7 @@ local function readFile(file: string): (BAC1Metadata, {IFrame | PFrame})
 		local frame	
 		o, frame = runWithWorkers("readFrame", b, o, metadata)
 		frames[frame.id] = frame
-		if frame.id%10 == 0 then print(frame.id) end
+		if frame.id%10 == 0 then progressHandler("decode", frame.id/metadata.frame_count) end
 	end
 
 	table.sort(frames, function(l, r)
@@ -226,7 +255,10 @@ local function play_frame(distributedInfos: {{CellRenderingInfo}}): ()
 	end
 end
 
-local metadata, frames = readFile(get_BAC1())
+local canvas = get_canvas()
+local progressHandler = getProgressUpdater(canvas)
+
+local metadata, frames = readFile(get_BAC1(), progressHandler)
 local cells = initializeCells(metadata, get_canvas())
 
 local syncEnd = os.clock() + 30
@@ -239,7 +271,7 @@ for i, frame in next, frames do
 	task.delay(syncEnd - os.clock() + timestamp, play_frame, cellInfo)
 
 	if i%10 == 0 then 
-		print(("deferring render of frame %i"):format(frame.id))
+		progressHandler("deferRender", frame.id/metadata.frame_count)
 	end
 end
 

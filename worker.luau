@@ -33,7 +33,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 
 	assert(frameType, ("unknown frameType %i at %i"):format(buffer.readu8(b, o), o))
 
-	-- local compression = buffer.readu8(b, o + 1)
+	local compression = buffer.readu8(b, o + 1)
 	local dataLength = buffer.readu32(b, o + 2)
 	local frameId = buffer.readu16(b, o + 6)
 	local interleavedData = buffer.readstring(b, o + 8, dataLength)
@@ -41,14 +41,14 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 	local interleaveWidth = frameType == 'I' and 2 or 4
 	local chunkCount = dataLength/interleaveWidth
 
-
-	local untangledData = table.create(chunkCount, "")
-	for cI = 0, chunkCount - 1 do
-		for bI = 0, interleaveWidth - 1 do
-			local si = bI * chunkCount + cI + 1
-			untangledData[cI + 1] ..= interleavedData:sub(si, si)
+	
+		local untangledData = table.create(chunkCount, "")
+		for cI = 0, chunkCount - 1 do
+			for bI = 0, interleaveWidth - 1 do
+				local si = bI * chunkCount + cI + 1
+				untangledData[cI + 1] ..= interleavedData:sub(si, si)
+			end
 		end
-	end
 
 	if frameType == 'I' then
 		local chunks: {{number}} = {}

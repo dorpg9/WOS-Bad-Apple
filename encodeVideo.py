@@ -13,10 +13,12 @@ CHUNK_TYPES = {
 	"I-FRAME": b'\0'
 }
 
+@jit
 def interleave_bytes(bytes: bytes, width: int) -> bytes:
 	rotated = np.frombuffer(bytes, dtype=np.uint8).reshape(-1, width)
 	return rotated.tobytes('F')
 
+@jit
 def frameBitArray_to_chunkArray(frameBitArray: np.ndarray) -> np.ndarray:
 	height_p, width_p = frameBitArray.shape
 	h_c, w_c = height_p // 4, width_p // 4
@@ -29,6 +31,7 @@ def frameBitArray_to_chunkArray(frameBitArray: np.ndarray) -> np.ndarray:
 
 	return flattened_mergedByteArray.reshape(h_c, w_c)
 
+@jit
 def compare_chunkDiffFlatArray(l_chunkArray: np.ndarray, r_chunkArray: np.ndarray) -> np.ndarray:
 	hasDiff = l_chunkArray != r_chunkArray
 
@@ -77,12 +80,12 @@ def dither(image):
 
     for y in range(0, height-1):
         for x in range(1, width-1):
-            ret[y][x+1] = 	ret[y][x+1] + 	(qError[y][x] 		* 7/16)
+            ret[y][x+1] = 	ret[y][x+1] + 	(qError[y][x+1] 	* 7/16)
             ret[y+1][x-1] = ret[y+1][x-1] + (qError[y+1][x-1] 	* 3/16)
             ret[y+1][x] = 	ret[y+1][x]+ 	(qError[y+1][x] 	* 5/16)
             ret[y+1][x+1] = ret[y+1][x+1] + (qError[y+1][x-1] 	* 1/16)
 
-    return (ret > 127)
+    return ret > 127
 
 
 videoCap = cv2.VideoCapture(VIDEO_PATH)
