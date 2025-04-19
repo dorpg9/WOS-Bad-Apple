@@ -85,20 +85,57 @@ def makeFileChunk(cType: bytes, id: int, _data: bytes, doInterleave: bool)-> byt
 		+ id.to_bytes(2, 'little') 
 		+ data)
 
-@jit
-def dither(image):
-    ret = (image > 127) * 255
-    qError = image - ret
-    height, width = ret.shape
 
-    for y in range(0, height-1):
-        for x in range(1, width-1):
-            ret[y][x+1] = 	ret[y][x+1] + 	(qError[y][x+1] 	* 7/16)
-            ret[y+1][x-1] = ret[y+1][x-1] + (qError[y+1][x-1] 	* 3/16)
-            ret[y+1][x] = 	ret[y+1][x]+ 	(qError[y+1][x] 	* 5/16)
-            ret[y+1][x+1] = ret[y+1][x+1] + (qError[y+1][x-1] 	* 1/16)
+@jit(nopython=True)
+def dither_floyd(_image: np.ndarray) -> np.ndarray:
+	image = _image.astype(np.float32)
+	h, w = image.shape
 
-    return ret > 127
+	thresholded = (image > 127.0) * 255.0
+	qError = image - thresholded
+
+	for y in range(h-1):
+		for x in range(1, w-1):
+			qError_p = qError[y, x]
+			thresholded[  y, x+1] += qError_p* 7.0/16.0
+			thresholded[y+1, x-1] += qError_p* 3.0/16.0
+			thresholded[y+1,   x] += qError_p* 5.0/16.0
+			thresholded[y+1, x+1] += qError_p* 1.0/16.0
+
+	return thresholded > 127.0
+
+def dither_bayer4(image: np.ndarray) -> np.ndarray:
+	bayer4 = np.array([
+		[ 0,  8,  2, 10],
+		[12,  4, 14,  6],
+		[ 3, 11,  1,  9],
+		[15,  7, 13,  5]
+	], dtype=np.uint8)
+
+	h, w = image.shape
+	t_map = np.tile(bayer4, (h//4+1, w//4+1))[:h, :w]
+
+	return image > t_map*16
+
+@jit(nopython=True)
+def dither_atkinson(_image: np.ndarray) -> np.ndarray:
+	image = _image.astype(np.float32)
+	h, w = image.shape
+
+	thresholded = (image > 127.0) * 255.0
+	qError = (image - thresholded) / 8.0
+	
+	for y in range(h-2):
+		for x in range(1, w-2):
+			qError_p = qError[y, x]
+			thresholded[  y, x+1] += qError_p
+			thresholded[  y, x+2] += qError_p
+			thresholded[y+1, x-1] += qError_p
+			thresholded[y+1,   x] += qError_p
+			thresholded[y+1, x+1] += qError_p
+			thresholded[y+2,   x] += qError_p
+
+	return thresholded > 127.0
 
 def encodeVideo(
 		_video_path: str,
@@ -106,7 +143,7 @@ def encodeVideo(
 		_t_height: int,
 		_t_fps: int,
 		_do_interleave: bool,
-		_do_dither: bool) -> bytes:
+		_do_dither: str) -> bytes:
 	
 	videoCap = cv2.VideoCapture(_video_path)
 
@@ -131,8 +168,15 @@ def encodeVideo(
 		frame = cv2.resize(frame, (_t_width, _t_height), interpolation=cv2.INTER_NEAREST)
 
 		grayscaledFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		boolFrame = dither(grayscaledFrame) if _do_dither else (grayscaledFrame > 127)
+		boolFrame = grayscaledFrame > 127
 
+		if _do_dither == "atkinson":
+			boolFrame = dither_atkinson(grayscaledFrame)
+		elif _do_dither == "bayer4":
+			boolFrame = dither_bayer4(grayscaledFrame)
+		elif _do_dither == "floyd":
+			boolFrame = dither_floyd(grayscaledFrame)
+		
 		frameBitMatrix = np.array(boolFrame, np.uint8)
 		chunkArray = frameBitArray_to_chunkArray(frameBitMatrix)
 
@@ -159,12 +203,12 @@ def main():
 	argParser.add_argument("-H", "--height", help="Target height", default=TARGET_HEIGHT, type=int)
 	argParser.add_argument("-F", "--fps", help="Target frames per second", default=TARGET_FPS, type=int)
 	argParser.add_argument("-L", "--do_interleave", help="Whether to enable byte interleave", action='store_true')
-	argParser.add_argument("-D", "--do_dithering", help="Whether or not to do dithering (kinda bad atm)", action="store_true")
+	argParser.add_argument("-D", "--dithering", help="Whether or not to do dithering (kinda bad atm)", choices=["none", "bayer4", "floyd", "atkinson"], default="none", type=str, required=False)
 
 	args = argParser.parse_args()
 
 	encodedBytes = encodeVideo(
-		args.input, args.width, args.height, args.fps, args.do_interleave, args.do_dithering)
+		args.input, args.width, args.height, args.fps, args.do_interleave, args.dithering)
 
 	with open(args.output, 'wb') as f:
 		f.write(encodedBytes)
