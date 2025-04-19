@@ -91,18 +91,19 @@ def dither_floyd(_image: np.ndarray) -> np.ndarray:
 	image = _image.astype(np.float32)
 	h, w = image.shape
 
-	thresholded = (image > 127.0) * 255.0
-	qError = image - thresholded
-
 	for y in range(h-1):
 		for x in range(1, w-1):
-			qError_p = qError[y, x]
-			thresholded[  y, x+1] += qError_p* 7.0/16.0
-			thresholded[y+1, x-1] += qError_p* 3.0/16.0
-			thresholded[y+1,   x] += qError_p* 5.0/16.0
-			thresholded[y+1, x+1] += qError_p* 1.0/16.0
+			old = image[y, x]
+			new = 255.0 if old > 127.0 else 0.0
+			image[y, x] = new
+			error = old - new
 
-	return thresholded > 127.0
+			image[  y, x+1] += error * 0.4375
+			image[y+1, x-1] += error * 0.1875
+			image[y+1,   x] += error * 0.3125
+			image[y+1, x+1] += error * 0.0625
+
+	return (image > 127.0).astype(np.uint8)
 
 def dither_bayer4(image: np.ndarray) -> np.ndarray:
 	bayer4 = np.array([
@@ -122,20 +123,21 @@ def dither_atkinson(_image: np.ndarray) -> np.ndarray:
 	image = _image.astype(np.float32)
 	h, w = image.shape
 
-	thresholded = (image > 127.0) * 255.0
-	qError = (image - thresholded) / 8.0
-	
 	for y in range(h-2):
 		for x in range(1, w-2):
-			qError_p = qError[y, x]
-			thresholded[  y, x+1] += qError_p
-			thresholded[  y, x+2] += qError_p
-			thresholded[y+1, x-1] += qError_p
-			thresholded[y+1,   x] += qError_p
-			thresholded[y+1, x+1] += qError_p
-			thresholded[y+2,   x] += qError_p
+			old = image[y, x]
+			new = 255.0 if old > 127.0 else 0.0
+			image[y, x] = new
+			error = (old - new)/8.0
 
-	return thresholded > 127.0
+			image[  y, x+1] += error
+			image[  y, x+2] += error
+			image[y+1, x-1] += error
+			image[y+1,   x] += error
+			image[y+1, x+1] += error
+			image[y+2,   x] += error
+
+	return (image > 127.0).astype(np.uint8)
 
 def encodeVideo(
 		_video_path: str,
