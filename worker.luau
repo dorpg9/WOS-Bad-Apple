@@ -99,10 +99,6 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 	end
 end
 
-local function cellState_to_offset(s: number)
-	return Vector2.new(s%256 * 4, s//256 * 4)
-end
-
 local function convert_frame_to_rSortedCellInfo(
 	metadata: BAC1Metadata, 
 	frame: IFrame|PFrame,
@@ -116,7 +112,7 @@ local function convert_frame_to_rSortedCellInfo(
 			for cX, cellState in next, row do
 				cellInfo_n = cellInfo_n + 1
 				cellInfos[cellInfo_n] = {
-					o = cellState_to_offset(cellState),
+					o = Vector2.new(cellState%256 * 4, cellState//256 * 4),
 					l = cells[cY][cX]
 				}
 			end
@@ -125,7 +121,7 @@ local function convert_frame_to_rSortedCellInfo(
 		for _, chunk in next, frame.chunks do
 			cellInfo_n = cellInfo_n + 1
 			cellInfos[cellInfo_n] = {
-				o = cellState_to_offset(chunk.s),
+				o = Vector2.new(chunk.s%256 * 4, chunk.s//256 * 4),
 				l = cells[chunk.p.Y][chunk.p.X]
 			}
 		end
