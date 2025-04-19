@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = "https://github.com/dorpg9/WOS-Bad-Apple/raw/refs/heads/ver-2025-01/zout/nodither2.zjson"
+local BAC1_URL = "http://0x0.st/8OWm.zjson"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 -- \):\s*[^\w_].*?\n
@@ -61,6 +61,22 @@ do
 	end
 end
 
+if IN_GAME then
+	local disk = GetPartFromPort(80, "Disk")
+	local loadUrl = disk and disk:Read("BAC1_active-url")
+	if type(loadUrl) == "string" then
+		BAC1_URL = loadUrl
+	end
+
+	local keyboard = GetPartFromPort(80, "Keyboard")
+	if keyboard then keyboard.TextInputted:Connect(function(cmd, _)
+		local url = cmd:match("seturl (%S+)")
+		if disk and url then
+			disk:Write("BAC1_active-url", url)
+		end
+	end) end
+end
+
 local function get_BAC1(): (string)
 	if IN_GAME then
 		local modem = assert(GetPartFromPort(1, 'Modem'), 'missing modem on port 1')
@@ -84,74 +100,6 @@ local function get_canvas(): (Frame)
 		return (script :: any).Parent.SurfaceGui.Canvas
 	end
 end
-
-
--- [chunk_type: 1 byte][compression: 1 byte][length: 4 bytes][id: 2 bytes][data: n bytes]
---[[
-local CHUNK_TYPES: {'I'|'P'} = {
-	[0] = 'I';
-	[1] = 'P';
-}
-
-local function readFrame(b: buffer, o: number, metadata: BAC1Metadata): (number, IFrame|PFrame)
-	local frameType: 'I'|'P' = CHUNK_TYPES[buffer.readu8(b, o)]
-
-	assert(frameType, ("unknown frameType %i at %i"):format(buffer.readu8(b, o), o))
-
-	-- local compression = buffer.readu8(b, o + 1)
-	local dataLength = buffer.readu32(b, o + 2)
-	local frameId = buffer.readu16(b, o + 6)
-	local interleavedData = buffer.readstring(b, o + 8, dataLength)
-
-	local interleaveWidth = frameType == 'I' and 2 or 4
-	local chunkCount = dataLength/interleaveWidth
-
-
-	local untangledData = table.create(chunkCount, "")
-	for cI = 0, chunkCount - 1 do
-		for bI = 0, interleaveWidth - 1 do
-			local si = bI * chunkCount + cI + 1
-			untangledData[cI + 1] ..= interleavedData:sub(si, si)
-		end
-	end
-
-	if frameType == 'I' then
-		local chunks: {{number}} = {}
-
-		assert(metadata.height_in_chunks*metadata.width_in_chunks == chunkCount,
-			("I-Frame chunk count mismatch, read %i"):format(chunkCount))
-		
-		for cY = 1, metadata.height_in_chunks do
-			chunks[cY] = {}
-			for cX = 1, metadata.width_in_chunks do
-				local flatChunkI = (cY - 1) * metadata.width_in_chunks + cX
-				chunks[cY][cX] = ("<I2"):unpack(untangledData[flatChunkI])
-			end
-		end
-
-		return o + 8 + dataLength, {
-			type = 'I', 
-			id = frameId, 
-			count = chunkCount,
-			chunks = chunks
-		}
-	else
-		local chunks: {{p: Vector2, s: number}} = {}
-
-		for _, chunkData in next, untangledData do
-			local cX: number, cY: number, chunk: number = ("<I1I1I2"):unpack(chunkData)
-			chunks[#chunks + 1] = {p = Vector2.new(cX, cY), s = chunk}
-		end
-
-		return o + 8 + dataLength, {
-			type = 'P', 
-			id = frameId, 
-			count = chunkCount,
-			chunks = chunks
-		}
-	end
-end
---]]
 
 local function getProgressUpdater(canvas: Frame)
 	local bar = Instance.new("Frame")
@@ -215,24 +163,24 @@ local function readFile(file: string, progressHandler: (string, number)->()): (B
 	return metadata, frames
 end
 
-local function initializeCells(metadata: BAC1Metadata, canvas: Frame): ({{ImageLabel}})
+local function initializeCells(metadata: BAC1Metadata, canvas: Frame): ({{ImageLabel}}, Frame)
 	local container = Instance.new('Frame')
 	container.BorderSizePixel = 0
 	container.BackgroundTransparency = 0
 	container.BackgroundColor3 = Color3.new(0.04, 0.04, 0.06)
 	container.Size = UDim2.fromOffset(metadata.width_in_chunks*4, metadata.height_in_chunks*4)
-	container.Position = UDim2.fromScale(0.5, 0.5)
+	container.Position = UDim2.fromScale(0.5, 1e+6)
 	container.AnchorPoint = Vector2.one * 0.5
 	container.Parent = canvas
 
 	local cellTemplate = Instance.new('ImageLabel')
 	cellTemplate.BackgroundColor3 = Color3.new()
 	cellTemplate.BorderSizePixel = 0
-	cellTemplate.Image = "rbxassetid://14750789446"
+	cellTemplate.Image = "rbxassetid://140538709701134"
 	cellTemplate.ImageRectSize = Vector2.new(4, 4)
 	cellTemplate.ResampleMode = Enum.ResamplerMode.Pixelated
-	cellTemplate.Rotation = 180 -- I have no idea lol
-	cellTemplate.ScaleType = Enum.ScaleType.Stretch
+	-- cellTemplate.Rotation = 180 -- I have no idea lol
+	cellTemplate.ScaleType = Enum.ScaleType.Crop
 	cellTemplate.Size = UDim2.fromOffset(4, 4)
 
 	local cells: {{ImageLabel}} = {}
@@ -247,7 +195,7 @@ local function initializeCells(metadata: BAC1Metadata, canvas: Frame): ({{ImageL
 		end
 	end
 
-	return cells
+	return cells, container
 end
 
 local function play_frame(distributedInfos: {{CellRenderingInfo}}): ()
@@ -262,7 +210,7 @@ local canvas = get_canvas()
 local progressHandler = getProgressUpdater(canvas)
 
 local metadata, frames = readFile(get_BAC1(), progressHandler)
-local cells = initializeCells(metadata, get_canvas())
+local cells, container = initializeCells(metadata, get_canvas())
 
 local toSchedule: {{t: number, c: {{CellRenderingInfo}}}} = {}
 
@@ -282,6 +230,7 @@ local syncT1 = os.clock() + 5
 for _, bakedFrame in next, toSchedule do
 	task.delay((syncT1 - os.clock()) + bakedFrame.t, play_frame, bakedFrame.c)
 end
+container.Position = UDim2.fromScale(0.5, 0.5)
 
 
 --[[
