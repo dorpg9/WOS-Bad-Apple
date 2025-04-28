@@ -1,6 +1,6 @@
 --!strict
 
-local BAC1_URL = "http://0x0.st/8OWm.zjson"
+local BAC1_URL = "https://raw.githubusercontent.com/dorpg9/WOS-Bad-Apple/refs/heads/ver-2025-01/zout/native_bayer4.zjson"
 local IN_GAME: boolean = (GetPartFromPort :: any) ~= nil
 
 -- \):\s*[^\w_].*?\n
