@@ -1,3 +1,4 @@
+--!strict
 type IFrame = {
 	type: 'I', 
 	id: number,
@@ -8,7 +9,7 @@ type PFrame = {
 	type: 'P', 
 	id: number,
 	count: number,
-	chunks: {{p: Vector2, s: number}}
+	chunks: {{p: number, s: number}}
 }
 
 type CellRenderingInfo = {
@@ -37,21 +38,37 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 	local dataLength = buffer.readu32(b, o + 2)
 	local frameId = buffer.readu16(b, o + 6)
 	local unresolvedData = buffer.readstring(b, o + 8, dataLength)
+	local unresolvedBuffer = buffer.fromstring(unresolvedData)
 
 	local sizeof_chunk = frameType == 'I' and 2 or 4
 	local chunkCount = dataLength/sizeof_chunk
 
 	local untangledData: buffer
-	if compression == '\x10' then
-		local deInterleaved = table.create(chunkCount, "")
-		for cI = 0, chunkCount - 1 do
-			for bI = 0, sizeof_chunk - 1 do
-				local si = bI * chunkCount + cI + 1
-				deInterleaved[cI + 1] ..= unresolvedData:sub(si, si)
+	if compression == 0x10 then
+		-- local deInterleaved = table.create(chunkCount, "")
+		-- for cI = 0, chunkCount - 1 do
+		-- 	for bI = 0, sizeof_chunk - 1 do
+		-- 		local si = bI * chunkCount + cI + 1
+		-- 		deInterleaved[cI + 1] ..= unresolvedData:sub(si, si)
+		-- 	end
+		-- end
+
+		-- untangledData = buffer.fromstring(table.concat(deInterleaved))
+
+		local deinterleaved = buffer.create(dataLength)
+		local byteI = 0
+
+		for bI = 0, sizeof_chunk - 1 do
+			local base = bI * chunkCount
+			for cI = 0, chunkCount - 1 do
+				buffer.writeu8(
+					deinterleaved, 
+					byteI, 
+					buffer.readu8(unresolvedBuffer, base + cI)
+				)
+				byteI += 1
 			end
 		end
-
-		untangledData = buffer.fromstring(table.concat(deInterleaved))
 	else
 		untangledData = buffer.fromstring(unresolvedData)
 	end
@@ -62,7 +79,7 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 		assert(metadata.height_in_chunks*metadata.width_in_chunks == chunkCount,
 			("I-Frame chunk count mismatch, read %i"):format(chunkCount))
 
-		
+
 		
 		for cY = 1, metadata.height_in_chunks do
 			chunks[cY] = {}
@@ -79,15 +96,16 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 			chunks = chunks
 		}
 	else
-		local chunks: {{p: Vector2, s: number}} = {}
+		local chunks: {{p: number, s: number}} = {}
 
+		local rowLength = metadata.width_in_chunks
 		for chunkI = 1, chunkCount do
 			local cX: number, cY: number, chunk: number = 
 				buffer.readu8(untangledData, (chunkI - 1)*4),
 				buffer.readu8(untangledData, (chunkI - 1)*4 + 1),
 				buffer.readu16(untangledData, (chunkI - 1)*4 + 2)
 			
-			chunks[#chunks + 1] = {p = Vector2.new(cX, cY), s = chunk}
+			chunks[#chunks + 1] = {p = (cY - 1)*rowLength + (cX - 1), s = chunk}
 		end
 
 		return o + 8 + dataLength, {
@@ -95,25 +113,29 @@ local function readFrame(b: buffer, o: number, metadata: BAC1Metadata)
 			id = frameId, 
 			count = chunkCount,
 			chunks = chunks
-		}
+		} :: any
 	end
 end
 
 local function convert_frame_to_rSortedCellInfo(
 	metadata: BAC1Metadata, 
 	frame: IFrame|PFrame,
-	cells: {{ImageLabel}},
+	cells: {ImageLabel},
 	workerCount: number)
 
+	local Vec2 = Vector2.new
+	
 	local cellInfos: {CellRenderingInfo} = {}
 	local cellInfo_n = 0
+
 	if frame.type == 'I' then
+		local rowLength = metadata.width_in_chunks
 		for cY, row in next, frame.chunks do
 			for cX, cellState in next, row do
 				cellInfo_n = cellInfo_n + 1
 				cellInfos[cellInfo_n] = {
 					o = Vector2.new(cellState%256 * 4, cellState//256 * 4),
-					l = cells[cY][cX]
+					l = cells[(cY - 1)*rowLength + (cX - 1)]
 				}
 			end
 		end
@@ -121,8 +143,8 @@ local function convert_frame_to_rSortedCellInfo(
 		for _, chunk in next, frame.chunks do
 			cellInfo_n = cellInfo_n + 1
 			cellInfos[cellInfo_n] = {
-				o = Vector2.new(chunk.s%256 * 4, chunk.s//256 * 4),
-				l = cells[chunk.p.Y][chunk.p.X]
+				o = 4 * Vec2(chunk.s%256, chunk.s//256),
+				l = cells[chunk.p]
 			}
 		end
 	end
@@ -141,6 +163,7 @@ local function convert_frame_to_rSortedCellInfo(
 end
 
 local actions = {
+
 	renderFromInfo = function(infos: {CellRenderingInfo})
 		for _, info in next, infos do
 			info.l.ImageRectOffset = info.o

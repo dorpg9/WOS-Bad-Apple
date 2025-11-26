@@ -16,7 +16,7 @@ type PFrame = {
 	type: 'P', 
 	id: number,
 	count: number,
-	chunks: {{p: Vector2, s: number}}
+	chunks: {{p: number, s: number}}
 }
 
 type CellRenderingInfo = {
@@ -36,7 +36,7 @@ local runWithWorkers:
 	& (("renderFromInfo", {CellRenderingInfo}) -> ())
 	& (("parent", Instance, Instance) -> ())
 	& (("clone", Instance) -> (Instance))
-	& (("buildCellInfo", BAC1Metadata, IFrame | PFrame, {{ImageLabel}}, number) -> ({{CellRenderingInfo}}))
+	& (("buildCellInfo", BAC1Metadata, IFrame | PFrame, {ImageLabel}, number) -> ({{CellRenderingInfo}}))
 local workerCount: number
 
 do
@@ -47,15 +47,54 @@ do
 		end
 	end
 
+	local workerUnits: {
+		{mc: Microcontroller, ctemSince: number, ctemDose: number}
+	} = {}
+
+	for i, mc in next, workerMicros do
+		workerUnits[i] = {
+			mc = mc,
+			ctemSince = os.clock(),
+			ctemDose = 0
+		}
+	end
+
 	workerCount = #workerMicros
 
-	local freeWorkerI = 1
+	local currentWorkerId = 1
+	local lastWorkDur = 0
+
 	function runWithWorkers(op, ...)
-		workerMicros[freeWorkerI]:Send(op, ...)
-		freeWorkerI += 1
-		if freeWorkerI > #workerMicros then
-			freeWorkerI = 1
-		end
+		local lastBusyWorkerId = currentWorkerId
+
+		repeat
+			currentWorkerId = currentWorkerId%workerCount + 1
+
+			local unit = workerUnits[currentWorkerId]
+			if os.clock() - unit.ctemSince > 1 then
+				unit.ctemDose = 0
+				unit.ctemSince = os.clock()
+			end
+
+			local freeWorkerFound = (unit.ctemDose + lastWorkDur) < 0.095
+
+			if 
+				not freeWorkerFound 
+				and currentWorkerId == lastBusyWorkerId 
+			then
+				print("workerHalt", unit.ctemDose, unit.ctemSince)
+				task.wait() end
+
+		until freeWorkerFound
+
+		
+		local unit = workerUnits[currentWorkerId]
+		local workSince = os.clock()
+
+		unit.mc:Send(op, ...)
+
+		lastWorkDur = math.min(os.clock() - workSince, 0.025)
+		unit.ctemDose += lastWorkDur
 
 		return select(2, Microcontroller:Receive())
 	end
@@ -214,23 +253,33 @@ local cells, container = initializeCells(metadata, get_canvas())
 
 local toSchedule: {{t: number, c: {{CellRenderingInfo}}}} = {}
 
+local flatCellArray: {ImageLabel} = {}
+local rowLength = #cells[1]
+for cY, row in ipairs(cells) do
+	for cX, cell in ipairs(row) do
+		flatCellArray[(cY - 1)*rowLength + (cX - 1)] = cell end
+end
+
 print(`baking render`)
 for i, frame in next, frames do
 	local timestamp = frame.id / metadata.fps
 
-	local cellInfo = runWithWorkers("buildCellInfo", metadata, frame, cells, workerCount)
+	local cellInfo = runWithWorkers("buildCellInfo", metadata, frame, flatCellArray, workerCount)
+
 	toSchedule[#toSchedule + 1] = {t = timestamp, c = cellInfo}
 
-	if i%10 == 0 then 
+	if i%50 == 0 then
+		task.wait()
 		progressHandler("deferRender", frame.id/metadata.frame_count)
 	end
 end
 
-local syncT1 = os.clock() + 5
+local syncT1 = os.clock() + 0.5
 for _, bakedFrame in next, toSchedule do
 	task.delay((syncT1 - os.clock()) + bakedFrame.t, play_frame, bakedFrame.c)
 end
 container.Position = UDim2.fromScale(0.5, 0.5)
+
 
 
 --[[
@@ -242,3 +291,4 @@ for i , cellInfo in ipairs(cellInfos) do
 	end
 end
 --]]
+
